@@ -12,6 +12,8 @@ Please follow these simple rules to keep the project clean and organized.
 2. [GitFlow Workflow](#2-gitflow-workflow)
 3. [Commit Messages](#3-commit-messages)
 4. [Pull Requests](#4-pull-requests)
+5. [React Native Conventions](#5-react-native-conventions)
+6. [Code Organization](#6-code-organization)
 
 ---
 
@@ -97,3 +99,80 @@ Examples:
 - `main` → `hotfix/bug-123` ✅ (no PR needed)
 
 These merges don’t affect the main branches directly, so no formal review process is required.
+
+---
+
+## 5. React Native Conventions
+
+### File Naming
+
+| Type | Convention | Example |
+|------|-----------|---------|
+| Screens | `PascalCase` + `Screen` suffix | `LoginScreen.tsx`, `BetDetailScreen.tsx` |
+| Components | `PascalCase`, one component per file | `BetCard.tsx`, `OddsDisplay.tsx` |
+| Hooks | `camelCase` with `use` prefix | `useBetHistory.ts`, `useAuth.ts` |
+| Services/API | `camelCase` | `authService.ts`, `betApi.ts` |
+| Utils | `camelCase` | `formatOdds.ts`, `dateHelpers.ts` |
+| Types/Interfaces | `PascalCase` | `Bet.ts`, `User.ts` |
+| Constants | `UPPER_SNAKE_CASE` in file, `camelCase` filename | `colors.ts`, `routes.ts` |
+
+### Navigation
+
+- Route names use `PascalCase`: `Login`, `BetDetail`, `Home`
+- Navigator names end with `Navigator`: `MainNavigator`, `AuthNavigator`
+- Route params are typed with `ParamList` types: `RootStackParamList`
+
+### State Management
+
+- Local UI state: `useState` / `useReducer`
+- Server state: React Query / TanStack Query (preferred for API caching)
+- Global app state: Context API or Zustand (keep it minimal)
+- Avoid storing derived data in state — compute it
+
+### Styles
+
+- Use `StyleSheet.create()` — always at the bottom of the file
+- Group styles logically: `container`, `header`, `content`, `footer`
+- Use the project’s theme/design tokens for colors, spacing, and fonts
+- No inline styles except for truly dynamic values
+
+### Assets
+
+- Images: `snake_case` — `login_background.png`, `bet_icon.png`
+- Organize by type: `assets/images/`, `assets/icons/`, `assets/fonts/`
+- Use `@2x` / `@3x` suffixes for resolution variants
+
+### Device Permissions
+
+- Declare all required permissions in `app.json` (Expo) or `Info.plist` / `AndroidManifest.xml`
+- Request permissions lazily (only when the feature is used, not at launch)
+- Always handle the "denied" case with a user-friendly fallback
+
+---
+
+## 6. Code Organization
+
+### Recommended Structure
+
+```
+src/
+  components/       # Reusable UI components
+    shared/         # Cross-feature components (Button, Card, Modal...)
+    <feature>/      # Feature-specific components
+  screens/          # Screen components (one per route)
+  navigation/       # Navigators and route config
+  hooks/            # Custom hooks
+  services/         # API calls, external services
+  stores/           # Global state (Context/Zustand)
+  types/            # TypeScript type definitions
+  utils/            # Pure utility functions
+  constants/        # App-wide constants (colors, routes, config)
+  assets/           # Images, icons, fonts
+```
+
+### Rules
+
+- **One component per file.** The filename matches the export name.
+- **Colocate feature code.** If a component is only used by one screen, keep it in that feature’s folder.
+- **Shared components** go in `src/components/shared/` only when used by 2+ features.
+- **No business logic in components.** Extract to hooks or services.
