@@ -9,89 +9,25 @@
 
 ## Workflow — The Tunnel
 
-Every feature follows a guided tunnel. The agent **never skips steps** and **always proposes next commands**.
-
-```
-/bet-onboarding (one-time)
-    └→ Identity, codebase audit, MCP setup
-
-/bet-new-feature <name>
-    └→ Questions → Plan → Review → Phases → Tracking → Branch
-    └→ Proposes: /bet-discuss-phase, /bet-plan-phase, /bet-execute
-
-Per phase:
-    /bet-discuss-phase <N> [prof]   → Optional Q&A to refine context
-    /bet-plan-phase <N> [prof]      → Detail technical plan (recommended)
-    /bet-execute <N> [prof]         → Implement code
-    /bet-commit                     → Commit (after each phase)
-    /bet-next                       → Advance to next phase
-
-Last phase is always tests:
-    /bet-execute <last> [prof]      → Write and run tests
-
-End of feature:
-    /bet-commit → /bet-doc → /bet-pr
-
-Session resumption:
-    /bet-progress                   → Full contextual briefing + next commands
-```
+Every feature follows: `/bet-new-feature` → per-phase (`/bet-plan-phase` → `/bet-execute` → `/bet-commit` → `/bet-next`) → `/bet-doc` → `/bet-pr`. The agent **never skips steps** and **always proposes next commands**. Last phase is always tests. Use `/bet-progress` to resume a session.
 
 ## Context Isolation
 
-Each phase has its own context window. Commands load ONLY what's needed:
-
-- **Phase context:** `.planning/<feature>/phase-<NN>/CONTEXT.md`
-- **Phase summary:** `.planning/<feature>/phase-<NN>/SUMMARY.md`
-- **Codebase audit:** `.planning/codebase/*.md`
-- **Feature plan:** `.planning/<feature>/PLAN.md`
-- **Tracking:** `.planning/<feature>/TRACKING.md`
-
-The SUMMARY.md of previous phases provides continuity WITHOUT loading full conversation history.
-
-## Commands Reference
-
-| Command | Purpose |
-|---------|---------|
-| `/bet-onboarding` | One-time setup: identity, audit, MCPs |
-| `/bet-new-feature <name>` | Start feature tunnel |
-| `/bet-discuss-phase <N> [prof]` | Q&A to refine phase context (optional) |
-| `/bet-plan-phase <N> [prof]` | Detail technical plan for phase |
-| `/bet-execute <N> [prof]` | Implement phase code |
-| `/bet-commit` | Propose commit (contributing.md format) |
-| `/bet-next` | Advance to next phase |
-| `/bet-progress` | Resume session with full briefing |
-| `/bet-pr` | Create Pull Request |
-| `/bet-doc` | Update documentation |
-| `/bet-prof on/off` | Toggle Professor Mode globally |
-| `/bet-branch` | Create GitFlow branch |
-| `/bet-refresh` | Re-audit codebase after pull |
-| `/bet-docker` | Docker management (placeholder) |
-
-## Professor Mode
-
-Two ways to activate:
-- **Global:** `/bet-prof on` — affects all commands until toggled off
-- **Per-command:** Add `prof` as argument — e.g., `/bet-execute 1 prof`
-
-In Professor Mode, the agent explains the *why* behind every decision, breaks down concepts, and asks if the user understood before moving on.
+Each phase loads ONLY what it needs from `.planning/`. The SUMMARY.md of previous phases provides continuity WITHOUT loading full conversation history. Never commit `.planning/` files.
 
 ## Commit Convention
 
-Format: `<type>(<scope>): <description>`
+Format: `<type>(<scope>): <description>` — Read `CONTRIBUTING.md` for full conventions.
 
 - **Types:** `feat`, `fix`, `test`, `docs`, `refactor`, `chore`, `style`, `perf`, `ci`, `build`, `revert`
 - **Scopes:** `global`, `front`, `back`, `mobile`, `data`, `db`
 - Description in present tense, imperative mood, lowercase, no period
 
-Read `CONTRIBUTING.md` for full conventions.
-
 ## PR Convention
 
-Title format: `[<SCOPE>] <Description>`
+Title format: `[<SCOPE>] <Description>` — Scopes: `GLOBAL`, `FRONT`, `BACK`, `MOBILE`, `DATA`, `DB`
 
-- **Scopes:** `GLOBAL`, `FRONT`, `BACK`, `MOBILE`, `DATA`, `DB`
-- The author must fill the description, assign themselves, and add labels.
-- PRs targeting `main` must include reviewers: Antoine Cormier & Maxence Guidez.
+The author must fill the description, assign themselves, and add labels. PRs targeting `main` must include reviewers: Antoine Cormier & Maxence Guidez.
 
 ## Branch Naming
 
@@ -100,29 +36,18 @@ Title format: `[<SCOPE>] <Description>`
 | Feature | `feature/<name>` | `develop` |
 | Hotfix | `hotfix/<name>` | `main` |
 
-## State Tracking
+## Professor Mode
 
-- **State:** `.planning/STATE.md` — current feature, phase, mode
-- **Plans:** `.planning/<feature>/PLAN.md` — feature plan with phases
-- **Tracking:** `.planning/<feature>/TRACKING.md` — phase progress and context briefing
-- **Phase context:** `.planning/<feature>/phase-<NN>/CONTEXT.md` — per-phase decisions
-- **Phase summary:** `.planning/<feature>/phase-<NN>/SUMMARY.md` — post-execution recap
-- **Codebase audit:** `.planning/codebase/*.md` — project analysis
-- **Identity:** `.planning/IDENTITY.md` — user info for commits/PRs
+Activate globally with `/bet-prof on` or per-command with `prof` argument (e.g., `/bet-execute 1 prof`). Explains the *why* behind every decision.
 
-Everything in `.planning/` is gitignored. Never commit planning files.
+## Layer-Specific Rules
+
+For multi-layer projects, add CLAUDE.md in subdirectories (e.g., `src/screens/CLAUDE.md`, `src/api/CLAUDE.md`). Claude merges these automatically with root rules.
 
 ## Jira Integration
 
-If Atlassian MCP is installed (`Jira: enabled` in STATE.md):
-- `/bet-new-feature` checks for matching Jira tickets
-- User can reference a ticket ID or describe the feature for auto-matching
-- If no match, propose creating a new ticket
-- Track ticket ID in TRACKING.md
+If Atlassian MCP is installed, `/bet-new-feature` checks for matching Jira tickets. See `/bet-onboarding` for setup.
 
-## Testing
+## Hooks & Safety
 
-- The **last phase** of every feature is dedicated to tests
-- At minimum: one happy path + one edge case per feature
-- Tests must pass before proposing a commit
-- In Professor Mode: explain what each test validates and why
+Deterministic hooks in `.claude/settings.json` enforce branch protection, block destructive commands, auto-lint after edits, and inject session context. These are **system-level guards** — not suggestions.
