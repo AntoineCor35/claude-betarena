@@ -1,6 +1,6 @@
 {
   "name": "claude-betarena",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A guided workflow system for Claude Code — tunnel-based feature development with context isolation, session resumption, and Professor Mode.",
   "keywords": [
     "claude",
@@ -19,9 +19,14 @@
   "bin": {
     "claude-betarena": "./bin/cli.mjs"
   },
+  "scripts": {
+    "sync": "node scripts/sync-templates.mjs",
+    "prepublishOnly": "npm run sync"
+  },
   "files": [
     "bin/",
     "templates/",
+    "scripts/",
     "README.md",
     "LICENSE"
   ],

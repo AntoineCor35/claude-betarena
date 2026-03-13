@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, chmodSync } from 'fs';
 import { resolve, join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
@@ -34,37 +34,61 @@ function ask(question) {
   });
 }
 
-function copyIfMissing(src, dest, label) {
-  if (existsSync(dest)) {
-    skip(`${label} already exists — skipped`);
-    return false;
-  }
-  copyFileSync(src, dest);
-  success(`${label} created`);
-  return true;
-}
-
 function ensureDir(dir) {
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
   }
 }
 
+function installDir(srcDir, destDir, ext, label, force) {
+  if (!existsSync(srcDir)) return { installed: 0, skipped: 0 };
+  ensureDir(destDir);
+  const files = readdirSync(srcDir).filter(f => f.endsWith(ext));
+  let installed = 0;
+  let skipped = 0;
+
+  for (const file of files) {
+    const dest = join(destDir, file);
+    const name = file.replace(ext, '').replace('bet-', '/bet-');
+
+    if (existsSync(dest) && !force) {
+      skip(`${name} already exists`);
+      skipped++;
+    } else {
+      copyFileSync(join(srcDir, file), dest);
+      if (ext === '.sh') chmodSync(dest, 0o755);
+      success(`${name}`);
+      installed++;
+    }
+  }
+
+  return { installed, skipped };
+}
+
 function addToGitignore(projectDir) {
   const gitignorePath = join(projectDir, '.gitignore');
-  const entry = '.planning/';
+  const entries = ['.planning/', '.claude/settings.local.json'];
 
   if (existsSync(gitignorePath)) {
-    const content = readFileSync(gitignorePath, 'utf-8');
-    if (content.includes(entry)) {
-      skip('.planning/ already in .gitignore');
-      return;
+    let content = readFileSync(gitignorePath, 'utf-8');
+    let added = [];
+
+    for (const entry of entries) {
+      if (!content.includes(entry)) {
+        added.push(entry);
+      }
     }
-    writeFileSync(gitignorePath, content.trimEnd() + '\n\n# BetArena planning files (agent-internal)\n.planning/\n');
-    success('.planning/ added to .gitignore');
+
+    if (added.length > 0) {
+      content = content.trimEnd() + '\n\n# BetArena (agent-internal)\n' + added.join('\n') + '\n';
+      writeFileSync(gitignorePath, content);
+      success(`Added to .gitignore: ${added.join(', ')}`);
+    } else {
+      skip('.gitignore already up to date');
+    }
   } else {
-    writeFileSync(gitignorePath, '# BetArena planning files (agent-internal)\n.planning/\n');
-    success('.gitignore created with .planning/');
+    writeFileSync(gitignorePath, '# BetArena (agent-internal)\n.planning/\n.claude/settings.local.json\n');
+    success('.gitignore created');
   }
 }
 
@@ -78,14 +102,17 @@ async function main() {
     log();
     log(`${BOLD}Usage:${RESET}`);
     log(`  npx claude-betarena              Install in the current directory`);
-    log(`  npx claude-betarena --force      Overwrite existing command files`);
+    log(`  npx claude-betarena --force      Overwrite existing files`);
     log(`  npx claude-betarena --help       Show this help`);
     log();
     log(`${BOLD}What it does:${RESET}`);
     log(`  1. Copies slash commands to .claude/commands/`);
-    log(`  2. Creates CLAUDE.md with agent rules (if missing)`);
-    log(`  3. Creates CONTRIBUTING.md with conventions (if missing)`);
-    log(`  4. Adds .planning/ to .gitignore`);
+    log(`  2. Copies subagents to .claude/agents/`);
+    log(`  3. Copies hook scripts to .claude/hooks/`);
+    log(`  4. Creates .claude/settings.json (shared team config)`);
+    log(`  5. Creates CLAUDE.md with agent rules (if missing)`);
+    log(`  6. Creates CONTRIBUTING.md with conventions (if missing)`);
+    log(`  7. Adds .planning/ and .claude/settings.local.json to .gitignore`);
     log();
     log(`${BOLD}After install:${RESET}`);
     log(`  Open Claude Code and run /bet-onboarding`);
@@ -97,38 +124,64 @@ async function main() {
   const projectDir = process.cwd();
 
   log();
-  log(`${BOLD}━━━ BetArena Workflow Installer ━━━${RESET}`);
+  log(`${BOLD}━━━ BetArena Workflow Installer v2 ━━━${RESET}`);
   log();
   info(`Installing in: ${DIM}${projectDir}${RESET}`);
   log();
 
   // 1. Commands
   log(`${BOLD}Commands${RESET}`);
-  const commandsDir = join(projectDir, '.claude', 'commands');
-  ensureDir(commandsDir);
-
-  const templateCommands = readdirSync(join(TEMPLATES, 'commands')).filter(f => f.endsWith('.md'));
-  let installed = 0;
-  let skipped = 0;
-
-  for (const file of templateCommands) {
-    const dest = join(commandsDir, file);
-    const label = file.replace('.md', '').replace('bet-', '/bet-');
-
-    if (existsSync(dest) && !force) {
-      skip(`${label} already exists`);
-      skipped++;
-    } else {
-      copyFileSync(join(TEMPLATES, 'commands', file), dest);
-      success(`${label}`);
-      installed++;
-    }
-  }
-
-  log(`  ${DIM}${installed} installed, ${skipped} skipped${RESET}`);
+  const cmdResult = installDir(
+    join(TEMPLATES, 'commands'),
+    join(projectDir, '.claude', 'commands'),
+    '.md', 'commands', force
+  );
+  log(`  ${DIM}${cmdResult.installed} installed, ${cmdResult.skipped} skipped${RESET}`);
   log();
 
-  // 2. CLAUDE.md
+  // 2. Agents
+  log(`${BOLD}Agents${RESET}`);
+  const agentResult = installDir(
+    join(TEMPLATES, 'agents'),
+    join(projectDir, '.claude', 'agents'),
+    '.md', 'agents', force
+  );
+  log(`  ${DIM}${agentResult.installed} installed, ${agentResult.skipped} skipped${RESET}`);
+  log();
+
+  // 3. Hooks
+  log(`${BOLD}Hooks${RESET}`);
+  const hookResult = installDir(
+    join(TEMPLATES, 'hooks'),
+    join(projectDir, '.claude', 'hooks'),
+    '.sh', 'hooks', force
+  );
+  log(`  ${DIM}${hookResult.installed} installed, ${hookResult.skipped} skipped${RESET}`);
+  log();
+
+  // 4. Settings
+  log(`${BOLD}Settings${RESET}`);
+  const settingsSrc = join(TEMPLATES, 'settings.json');
+  const settingsDest = join(projectDir, '.claude', 'settings.json');
+
+  if (existsSync(settingsSrc)) {
+    if (existsSync(settingsDest) && !force) {
+      const answer = await ask('settings.json already exists. Overwrite? (yes/no)');
+      if (answer === 'yes' || answer === 'y') {
+        copyFileSync(settingsSrc, settingsDest);
+        success('settings.json overwritten');
+      } else {
+        skip('settings.json kept as-is');
+      }
+    } else {
+      ensureDir(join(projectDir, '.claude'));
+      copyFileSync(settingsSrc, settingsDest);
+      success('settings.json created');
+    }
+  }
+  log();
+
+  // 5. CLAUDE.md
   log(`${BOLD}Configuration${RESET}`);
   const claudeMdSrc = join(TEMPLATES, 'CLAUDE.md');
   const claudeMdDest = join(projectDir, 'CLAUDE.md');
@@ -146,7 +199,7 @@ async function main() {
     success('CLAUDE.md created');
   }
 
-  // 3. CONTRIBUTING.md
+  // 6. CONTRIBUTING.md
   const contributingSrc = join(TEMPLATES, 'CONTRIBUTING.md');
   const contributingDest = join(projectDir, 'CONTRIBUTING.md');
 
@@ -157,12 +210,18 @@ async function main() {
     success('CONTRIBUTING.md created');
   }
 
-  // 4. .gitignore
+  // 7. .gitignore
   addToGitignore(projectDir);
   log();
 
-  // 5. Summary
+  // 8. Summary
   log(`${BOLD}${GREEN}Installation complete!${RESET}`);
+  log();
+  log(`${BOLD}What was installed:${RESET}`);
+  log(`  ${CYAN}Commands${RESET}   ${cmdResult.installed} slash commands in .claude/commands/`);
+  log(`  ${CYAN}Agents${RESET}     ${agentResult.installed} subagents in .claude/agents/ (reviewer, tester, security)`);
+  log(`  ${CYAN}Hooks${RESET}      ${hookResult.installed} hook scripts in .claude/hooks/ (branch protection, auto-lint, session context)`);
+  log(`  ${CYAN}Settings${RESET}   .claude/settings.json (shared team permissions & hooks)`);
   log();
   log(`${BOLD}Next steps:${RESET}`);
   log(`  1. Open Claude Code in this project`);
@@ -171,7 +230,8 @@ async function main() {
   log();
   log(`${DIM}All commands: /bet-onboarding, /bet-new-feature, /bet-discuss-phase,`);
   log(`/bet-plan-phase, /bet-execute, /bet-commit, /bet-next, /bet-progress,`);
-  log(`/bet-pr, /bet-doc, /bet-prof, /bet-branch, /bet-refresh, /bet-docker${RESET}`);
+  log(`/bet-pr, /bet-doc, /bet-prof, /bet-branch, /bet-refresh, /bet-review,`);
+  log(`/bet-switch, /bet-docker${RESET}`);
   log();
 }
 

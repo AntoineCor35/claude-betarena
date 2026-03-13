@@ -18,7 +18,17 @@ Working with Claude Code on real projects, you quickly run into problems:
 - **Session breaks** — when you come back the next day, all context is gone
 - **No guardrails** — nothing stops you from committing to `main` or skipping tests
 
-BetArena solves this with **file-based state management** and **phase-isolated context**. Each phase of your feature gets its own context documents. The agent loads only what it needs, keeping the context window lean and focused.
+BetArena solves this with **file-based state management**, **phase-isolated context**, and **deterministic hooks** that enforce rules at the system level.
+
+---
+
+## What's New in v2
+
+- **Deterministic hooks** — branch protection, destructive command blocking, auto-lint, and session context injection are now enforced via `.claude/settings.json` hooks (not just CLAUDE.md suggestions)
+- **Subagents** — dedicated reviewer, tester, and security agents using the Writer/Reviewer pattern for unbiased code review
+- **Multi-feature support** — work on multiple features in parallel, switch context with `/bet-switch`
+- **React Native conventions** — CONTRIBUTING.md now includes mobile-specific conventions
+- **Auto-sync templates** — `npm run sync` copies `.claude/` to `templates/` so you only maintain one copy
 
 ---
 
@@ -32,15 +42,18 @@ Run this in your project root:
 npx claude-betarena
 ```
 
-This copies the slash commands, `CLAUDE.md`, `CONTRIBUTING.md`, and sets up `.gitignore` — all non-destructive (existing files are skipped unless you use `--force`).
+This installs:
+- 16 slash commands in `.claude/commands/`
+- 3 subagents in `.claude/agents/` (reviewer, tester, security)
+- 3 hook scripts in `.claude/hooks/` (branch guard, auto-lint, session context)
+- `.claude/settings.json` (shared team permissions and hooks)
+- `CLAUDE.md` and `CONTRIBUTING.md` (conventions)
 
 To overwrite existing files:
 
 ```bash
 npx claude-betarena --force
 ```
-
-The `.claude/commands/` directory is automatically detected by Claude Code.
 
 ### 2. Onboard (one-time)
 
@@ -52,7 +65,6 @@ This sets up:
 - Your identity (name, email for commits/PRs)
 - A full codebase audit (stack, architecture, conventions, structure, tests)
 - Recommended MCP integrations (Jira, GitHub, Chrome DevTools, Playwright, Figma)
-- Optional post-pull hook to keep the audit up to date
 
 ### 3. Start a feature
 
@@ -83,6 +95,7 @@ Repeat until all phases are done. The last phase is always **tests**.
 ### 5. Ship it
 
 ```
+/bet-review                   # AI code review (fresh context)
 /bet-doc                      # Update project documentation
 /bet-pr                       # Create the Pull Request
 ```
@@ -108,6 +121,7 @@ Repeat until all phases are done. The last phase is always **tests**.
 | `/bet-execute <N> [prof]` | Implement the phase code |
 | `/bet-next` | Advance to the next phase |
 | `/bet-progress` | Resume a session with full contextual briefing |
+| `/bet-switch [slug]` | Switch between parallel features |
 
 ### Git & Delivery
 
@@ -117,6 +131,7 @@ Repeat until all phases are done. The last phase is always **tests**.
 | `/bet-pr` | Create a Pull Request |
 | `/bet-branch` | Create a GitFlow branch manually |
 | `/bet-doc` | Update project documentation |
+| `/bet-review [security]` | AI code review with fresh context (Writer/Reviewer pattern) |
 
 ### Modes
 
@@ -124,6 +139,50 @@ Repeat until all phases are done. The last phase is always **tests**.
 |---------|-------------|
 | `/bet-prof on/off` | Toggle Professor Mode globally |
 | `/bet-docker` | Docker management *(placeholder — coming soon)* |
+
+---
+
+## Hooks & Safety
+
+BetArena v2 enforces rules at the system level via `.claude/settings.json` hooks — not just CLAUDE.md suggestions that the LLM can ignore.
+
+| Hook | Trigger | What it does |
+|------|---------|-------------|
+| `pre-bash-guard.sh` | Before any Bash command | Blocks `git push origin main/develop`, `git reset --hard`, `rm -rf`, direct commits on protected branches |
+| `post-edit-lint.sh` | After any file edit | Auto-detects and runs your linter (Prettier, ESLint, Biome) |
+| `session-start.sh` | Session start | Injects current branch, git status, and active feature context |
+
+These are deterministic — no matter what the LLM "decides", the hook blocks the action. The `settings.json` also includes permission deny rules for force pushes and recursive deletes.
+
+---
+
+## Subagents
+
+Three specialized agents in `.claude/agents/` provide fresh-context analysis:
+
+| Agent | Purpose |
+|-------|---------|
+| **reviewer** | Code review using the Writer/Reviewer pattern — reviews the diff without implementation bias |
+| **tester** | Dedicated test writing — enforces happy path + edge case minimum |
+| **security** | Security audit — scans for secrets, XSS, injection, insecure storage |
+
+Use them via `/bet-review` (code review) or `/bet-review security` (security audit).
+
+---
+
+## Multi-Feature Support
+
+Unlike v1 which blocked if a feature was in progress, v2 supports parallel features:
+
+```
+/bet-new-feature login-system      # Start feature A
+# ... work on it ...
+/bet-new-feature hotfix-crash      # Pause A, start B
+/bet-switch login-system           # Switch back to A
+/bet-progress                      # Shows all features, highlights active
+```
+
+Each developer's `.planning/STATE.md` tracks multiple features with one marked as `Active`.
 
 ---
 
@@ -149,35 +208,32 @@ Ideal for:
 
 ```
 /bet-new-feature
-    │
-    ├── Questions (scope, business logic, technical choices)
-    ├── Plan (written, reviewed, approved by you)
-    ├── Phase split (each phase independently testable)
-    ├── Tracking doc (for session resumption)
-    └── Branch creation (GitFlow)
-         │
-         ├── Phase 1: Code
-         │    ├── /bet-discuss-phase 1   (optional)
-         │    ├── /bet-plan-phase 1      (recommended)
-         │    ├── /bet-execute 1
-         │    └── /bet-commit
-         │
-         ├── Phase 2: Code
-         │    ├── ...
-         │    └── /bet-commit
-         │
-         ├── Phase N: Tests
-         │    ├── /bet-execute N
-         │    └── /bet-commit
-         │
-         └── Delivery
-              ├── /bet-doc
-              └── /bet-pr
+    |
+    +-- Questions (scope, business logic, technical choices)
+    +-- Plan (written, reviewed, approved by you)
+    +-- Phase split (each phase independently testable)
+    +-- Tracking doc (for session resumption)
+    +-- Branch creation (GitFlow)
+         |
+         +-- Phase 1: Code
+         |    +-- /bet-discuss-phase 1   (optional)
+         |    +-- /bet-plan-phase 1      (recommended)
+         |    +-- /bet-execute 1
+         |    +-- /bet-commit
+         |
+         +-- Phase 2: Code
+         |    +-- ...
+         |    +-- /bet-commit
+         |
+         +-- Phase N: Tests
+         |    +-- /bet-execute N
+         |    +-- /bet-commit
+         |
+         +-- Delivery
+              +-- /bet-review
+              +-- /bet-doc
+              +-- /bet-pr
 ```
-
-### Feature gate
-
-`/bet-new-feature` **blocks** if a feature is already in progress. You must finish or close the current one first. This prevents losing track of work.
 
 ### Session resumption
 
@@ -195,7 +251,7 @@ The key innovation borrowed from [GSD](https://github.com/gsd-build/get-shit-don
 
 ```
 .planning/
-  STATE.md                          # Current feature, phase, mode
+  STATE.md                          # Active feature, all features, mode
   IDENTITY.md                       # Name, email
   codebase/
     STACK.md                        # Tech stack and dependencies
@@ -223,6 +279,20 @@ When executing Phase 3, the agent loads:
 It does **not** load phase 1 details, full conversation history, or unrelated code. This keeps the context window at ~30% utilization, leaving room for actual implementation work.
 
 Everything in `.planning/` is **gitignored** — these are agent-internal documents, never committed.
+
+---
+
+## Layer-Specific Rules
+
+For multi-layer projects, add `CLAUDE.md` in subdirectories. Claude merges these automatically with root rules:
+
+```
+CLAUDE.md                           # Root — golden rules, conventions
+src/screens/CLAUDE.md               # Screen-specific rules
+src/api/CLAUDE.md                   # API layer rules
+```
+
+An example mobile CLAUDE.md is provided in `templates/examples/mobile-CLAUDE.md`.
 
 ---
 
@@ -257,11 +327,11 @@ test(back): add unit tests for auth service
 
 **Branches:**
 ```
-feature/user-auth      → merges to develop
-hotfix/login-crash     → merges to main
+feature/user-auth      -> merges to develop
+hotfix/login-crash     -> merges to main
 ```
 
-The agent **never commits without your approval** and **never pushes to protected branches**.
+The agent **never commits without your approval** and **never pushes to protected branches** (enforced by hooks).
 
 ---
 
@@ -278,6 +348,21 @@ Proposed during `/bet-onboarding`:
 | **Figma** | Import designs and mockups as reference |
 
 All optional — install what makes sense for your project.
+
+---
+
+## For Maintainers
+
+### Template Sync
+
+Files are maintained in `.claude/` (the "live" copy) and synced to `templates/` automatically:
+
+```bash
+npm run sync         # Manual sync
+npm publish          # Auto-syncs via prepublishOnly
+```
+
+This means you only edit files in `.claude/` and `CLAUDE.md`/`CONTRIBUTING.md` at root. The sync script copies everything to `templates/`.
 
 ---
 
