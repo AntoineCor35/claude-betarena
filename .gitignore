@@ -1,0 +1,5 @@
+node_modules/
+.planning/
+.DS_Store
+.history/
+test 1/

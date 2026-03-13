@@ -1,0 +1,32 @@
+{
+  "name": "claude-betarena",
+  "version": "1.0.0",
+  "description": "A guided workflow system for Claude Code — tunnel-based feature development with context isolation, session resumption, and Professor Mode.",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "workflow",
+    "ai",
+    "developer-tools",
+    "gitflow"
+  ],
+  "author": "Antoine Cormier",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AntoineCor35/claude-betarena"
+  },
+  "bin": {
+    "claude-betarena": "./bin/cli.mjs"
+  },
+  "files": [
+    "bin/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=16"
+  }
+}
