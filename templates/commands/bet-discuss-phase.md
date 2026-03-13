@@ -6,7 +6,7 @@ This command is **optional**. It creates a detailed context document for the pha
 
 ## Setup
 
-1. Read `.planning/STATE.md` — identify current feature.
+1. Read `.planning/STATE.md` — identify the **active** feature (from the `Active:` line).
 2. Parse `$ARGUMENTS` — extract phase number and check for `prof` flag.
 3. Read `.planning/<feature>/PLAN.md` — load ONLY the target phase definition.
 4. Read `.planning/codebase/ARCHITECTURE.md` and `.planning/codebase/STACK.md` for project context.

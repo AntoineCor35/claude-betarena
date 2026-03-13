@@ -4,7 +4,7 @@ Usage: `/bet-execute <phase-number> [prof]`
 
 ## Setup
 
-1. Read `.planning/STATE.md` — identify current feature.
+1. Read `.planning/STATE.md` — identify the **active** feature (from the `Active:` line).
 2. Parse `$ARGUMENTS` — extract phase number and check for `prof` flag.
 3. Read `.planning/<feature>/PLAN.md` — load ONLY the target phase (with detailed steps if plan-phase was run).
 4. Read `.planning/<feature>/phase-<NN>/CONTEXT.md` if it exists.

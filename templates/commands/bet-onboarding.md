@@ -98,12 +98,11 @@ Create `.planning/STATE.md`:
 # Project State
 
 Mode: Builder
-Feature: none
-Phase: —
+Active: none
 Jira: <enabled|disabled>
 Last onboarding: <today's date>
 
-## In progress
+## Features
 _No feature in progress._
 
 ## Completed features

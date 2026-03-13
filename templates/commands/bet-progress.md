@@ -8,7 +8,7 @@ This command replaces `/bet-status`. It's designed for session resumption — it
 2. Read `.planning/IDENTITY.md` if it exists.
 3. Read `CONTRIBUTING.md`.
 
-### If no feature in progress:
+### If no feature in progress (no `Active:` line or `Active: none`):
 
 ```
 No feature in progress.
@@ -17,6 +17,20 @@ No feature in progress.
   /bet-onboarding            Set up the project (if not done)
 ━━━━━━━━━━━━━━━━━━━━━━
 ```
+
+### If multiple features exist:
+
+Show ALL features from `## Features` section, highlight the active one (from `Active:` line):
+
+```
+Features:
+  ◀ <active-slug>     Phase <N>/<total>  (feature/<slug>)
+    <paused-slug>     Phase <N>/<total>  (hotfix/<slug>)  — paused
+
+Switch with: /bet-switch <slug>
+```
+
+Then continue with the full briefing for the **active** feature only.
 
 ### If a feature is in progress:
 

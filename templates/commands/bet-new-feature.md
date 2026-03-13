@@ -2,22 +2,24 @@ Start a new feature. Enters a guided tunnel: questions → plan → review → p
 
 Usage: `/bet-new-feature <feature description>`
 
-## Guard — Check for in-progress feature
+## Guard — Check for in-progress features
 
 1. Read `.planning/STATE.md`.
-2. If a feature is already in progress (not completed):
-   - **Block.** Display:
+2. If one or more features are already in progress:
+   - **Warn but allow.** Display:
 
 ```
-⚠ Feature "<name>" is already in progress (Phase <N>/<total>).
+⚠ Feature(s) already in progress:
+  - "<name>" (Phase <N>/<total>) on branch <branch>
 
-You must finish or close it before starting a new one.
-  /bet-progress        → Resume where you left off
-  /bet-next            → Continue to next phase
-  /bet-execute <N>     → Execute current phase
+Starting a new feature will pause the current one.
+You can switch back anytime with /bet-switch <slug>.
+
+Continue? (yes / no)
 ```
 
-   - **Stop here.** Do not continue.
+   - If the user confirms, continue. The existing feature stays in STATE.md under `## Features`.
+   - If the user cancels, suggest `/bet-progress` to resume.
 
 3. If no feature in progress, continue.
 
@@ -156,10 +158,18 @@ _None yet._
 
 ## Step 8 — Update STATE.md
 
+Set the new feature as `Active` and add it under `## Features`:
+
 ```markdown
-Feature: <name>
-Phase: 0/<total> — Planning complete
+Active: <feature-slug>
+
+### <feature-slug>
+Phase: 0/<total>
+Branch: feature/<feature-slug>
+Started: <today>
 ```
+
+If other features already exist in `## Features`, keep them — just change the `Active:` line.
 
 ## Step 9 — Present next steps
 

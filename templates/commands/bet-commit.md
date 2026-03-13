@@ -3,7 +3,7 @@ Propose a commit following BetArena conventions and wait for user approval.
 ## Instructions
 
 1. Read `CONTRIBUTING.md` — source of truth for commit format.
-2. Read `.planning/STATE.md` — current feature and phase.
+2. Read `.planning/STATE.md` — identify the **active** feature (from the `Active:` line) and its phase.
 3. Read `.planning/IDENTITY.md` — for commit author info.
 4. Run `git status` and `git diff --staged` (or `git diff` if nothing is staged) to see what changed.
 5. If the project has a test suite and this is relevant, run it — if tests fail, **stop and tell the user** instead of proposing a commit.

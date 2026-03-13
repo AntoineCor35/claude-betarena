@@ -2,7 +2,7 @@ Move to the next phase. Summarizes progress and proposes available commands.
 
 ## Instructions
 
-1. Read `.planning/STATE.md` — find current feature and phase number.
+1. Read `.planning/STATE.md` — find the **active** feature (from the `Active:` line) and its phase number.
 2. Read `.planning/<feature>/TRACKING.md` — get full phase list and status.
 3. Read `CONTRIBUTING.md` — for commit conventions.
 
