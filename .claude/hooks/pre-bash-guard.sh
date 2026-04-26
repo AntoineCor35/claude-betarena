@@ -1,7 +1,8 @@
 #!/bin/bash
 # Pre-Bash guard hook — blocks dangerous commands deterministically.
 # Receives JSON on stdin: {"tool_name": "Bash", "tool_input": {"command": "..."}}
-# Outputs JSON to block, or nothing to allow.
+# Outputs hookSpecificOutput with permissionDecision to block, or nothing to allow.
+# See: https://code.claude.com/docs/en/hooks (PreToolUse decision control)
 
 set -euo pipefail
 
@@ -11,8 +12,17 @@ COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | 
 # Unescape basic JSON escapes
 COMMAND=$(echo "$COMMAND" | sed 's/\\n/ /g; s/\\t/ /g; s/\\"/"/g; s/\\\\/\\/g')
 
+# Escape reason text for JSON embedding (quotes and backslashes)
+json_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
 block() {
-  echo "{\"decision\": \"block\", \"reason\": \"$1\"}"
+  local reason
+  reason=$(json_escape "$1")
+  cat <<EOF
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"$reason"}}
+EOF
   exit 0
 }
 
