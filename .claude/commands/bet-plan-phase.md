@@ -1,3 +1,10 @@
+---
+description: Create a detailed technical plan for a specific phase
+argument-hint: "<phase-number> [prof]"
+allowed-tools: Read, Write, Glob, Grep
+disable-model-invocation: true
+---
+
 Create a detailed technical plan for a specific phase.
 
 Usage: `/bet-plan-phase <phase-number> [prof]`

@@ -1,3 +1,10 @@
+---
+description: Toggle Professor Mode globally (verbose explanations on every decision)
+argument-hint: "on | off"
+allowed-tools: Read, Edit
+disable-model-invocation: true
+---
+
 Toggle Professor Mode globally. Usage: `/bet-prof on` or `/bet-prof off`
 
 Note: Professor Mode can also be activated per-command by adding `prof` to any command's arguments (e.g., `/bet-execute 1 prof`). This global toggle sets the default for ALL commands.

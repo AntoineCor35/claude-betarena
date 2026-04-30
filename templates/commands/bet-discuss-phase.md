@@ -1,3 +1,10 @@
+---
+description: Q&A to refine context for a phase before planning or executing (optional)
+argument-hint: "<phase-number> [prof]"
+allowed-tools: Read, Glob, Grep, Bash(git *)
+disable-model-invocation: true
+---
+
 Discuss a phase to refine its context before planning or executing.
 
 Usage: `/bet-discuss-phase <phase-number> [prof]`

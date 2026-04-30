@@ -1,3 +1,9 @@
+---
+description: Propose a commit following BetArena conventions and wait for user approval
+allowed-tools: Read, Bash(git status*), Bash(git diff*), Bash(git add *), Bash(git commit *), Bash(git log*)
+disable-model-invocation: true
+---
+
 Propose a commit following BetArena conventions and wait for user approval.
 
 ## Instructions

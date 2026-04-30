@@ -1,3 +1,9 @@
+---
+description: Resume a session — full contextual briefing and recommended next command
+allowed-tools: Read, Glob, Bash(git status*), Bash(git log*), Bash(git branch*)
+disable-model-invocation: true
+---
+
 Resume a session. Full contextual briefing for picking up where you left off.
 
 This command replaces `/bet-status`. It's designed for session resumption — it reloads all relevant context and tells Claude exactly where things stand.

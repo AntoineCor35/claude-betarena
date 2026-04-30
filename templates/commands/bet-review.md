@@ -1,3 +1,10 @@
+---
+description: Trigger an AI code review of the current branch using a fresh-context reviewer agent
+argument-hint: "[security]"
+allowed-tools: Read, Bash(git diff*), Bash(git log*), Bash(git branch*)
+disable-model-invocation: true
+---
+
 Trigger an AI code review of the current branch using a fresh-context reviewer agent.
 
 Usage: `/bet-review` or `/bet-review security`

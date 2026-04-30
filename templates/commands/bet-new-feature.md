@@ -1,3 +1,10 @@
+---
+description: Start a new feature — guided tunnel from questions to plan to branch
+argument-hint: "<feature description>"
+allowed-tools: Read, Write, Glob, Grep, Bash(git *)
+disable-model-invocation: true
+---
+
 Start a new feature. Enters a guided tunnel: questions → plan → review → phases → tracking.
 
 Usage: `/bet-new-feature <feature description>`

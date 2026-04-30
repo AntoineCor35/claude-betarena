@@ -1,3 +1,9 @@
+---
+description: Move to the next phase, summarize progress, propose next commands
+allowed-tools: Read, Edit, Bash(git status*), Bash(git log*)
+disable-model-invocation: true
+---
+
 Move to the next phase. Summarizes progress and proposes available commands.
 
 ## Instructions

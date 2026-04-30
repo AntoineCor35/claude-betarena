@@ -1,3 +1,9 @@
+---
+description: Refresh the codebase audit after a git pull or structural change
+allowed-tools: Read, Write, Glob, Grep, Bash(git status*), Bash(git log*)
+disable-model-invocation: true
+---
+
 Refresh the codebase audit. Run this after a `git pull` or when the project structure has changed.
 
 ## Instructions

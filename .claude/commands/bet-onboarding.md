@@ -1,3 +1,9 @@
+---
+description: One-time project onboarding — identity, codebase audit, MCP setup
+allowed-tools: Read, Write, Glob, Grep, Bash
+disable-model-invocation: true
+---
+
 One-time project onboarding. Sets up identity, audits the codebase, and proposes useful MCP integrations.
 
 ## Guard

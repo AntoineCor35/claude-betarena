@@ -1,3 +1,10 @@
+---
+description: Switch the active feature context to another in-progress feature
+argument-hint: "[feature-slug]"
+allowed-tools: Read, Edit, Bash(git *)
+disable-model-invocation: true
+---
+
 Switch the active feature context. Useful when you need to pause a feature (e.g., for a hotfix) and come back later.
 
 Usage: `/bet-switch` or `/bet-switch <feature-slug>`

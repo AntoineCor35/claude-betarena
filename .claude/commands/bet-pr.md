@@ -1,3 +1,9 @@
+---
+description: Prepare and create a Pull Request following BetArena conventions
+allowed-tools: Read, Bash(git *), Bash(gh *)
+disable-model-invocation: true
+---
+
 Prepare and create a Pull Request following BetArena conventions.
 
 ## Instructions

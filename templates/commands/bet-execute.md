@@ -1,3 +1,10 @@
+---
+description: Execute a phase — implement the planned code changes
+argument-hint: "<phase-number> [prof]"
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+disable-model-invocation: true
+---
+
 Execute a phase: implement the code.
 
 Usage: `/bet-execute <phase-number> [prof]`

@@ -1,3 +1,10 @@
+---
+description: Create a new GitFlow branch (feature/* from develop or hotfix/* from main)
+argument-hint: "[feature|hotfix] [name]"
+allowed-tools: Bash(git *)
+disable-model-invocation: true
+---
+
 Create a new branch following GitFlow conventions.
 
 ## Instructions

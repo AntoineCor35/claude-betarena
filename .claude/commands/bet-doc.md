@@ -1,3 +1,10 @@
+---
+description: Update project documentation for the current or recently completed feature
+argument-hint: "[prof]"
+allowed-tools: Read, Edit, Write, Glob, Grep
+disable-model-invocation: true
+---
+
 Update project documentation for the current or recently completed feature.
 
 ## Instructions

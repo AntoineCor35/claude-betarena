@@ -1,3 +1,8 @@
+---
+description: Docker management commands (placeholder — not yet implemented)
+disable-model-invocation: true
+---
+
 Docker management commands for running, testing, and debugging with containers.
 
 **⚠ This command is a placeholder.** Docker integration will be configured once `docker-compose.yml` and container definitions are available in the project.
