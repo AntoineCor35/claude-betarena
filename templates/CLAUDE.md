@@ -51,3 +51,7 @@ If Atlassian MCP is installed, `/bet-new-feature` checks for matching Jira ticke
 ## Hooks & Safety
 
 Deterministic hooks in `.claude/settings.json` enforce branch protection, block destructive commands, auto-lint after edits, and inject session context. These are **system-level guards** — not suggestions.
+
+## Recommended Model Config
+
+`model: opusplan` (Opus 4.7 in plan mode, Sonnet 4.6 in execute mode) with `effortLevel: xhigh`. Sub-agents declare their own model via frontmatter (`reviewer`/`tester` use Sonnet, `security` keeps Opus). Opus 4.7 always uses adaptive reasoning — control depth with `effortLevel` or `/effort`, not `MAX_THINKING_TOKENS`.

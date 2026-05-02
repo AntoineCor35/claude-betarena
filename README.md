@@ -366,9 +366,37 @@ This means you only edit files in `.claude/` and `CLAUDE.md`/`CONTRIBUTING.md` a
 
 ---
 
+## Recommended Claude Code Config
+
+BetArena targets Claude Code v2.1.111+ with Opus 4.7. The following user-level settings (`~/.claude/settings.json`) are recommended but optional:
+
+```json
+{
+  "model": "opusplan",
+  "effortLevel": "xhigh",
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  }
+}
+```
+
+**Why these defaults:**
+
+| Setting | Effect |
+|---------|--------|
+| `model: opusplan` | Uses Opus 4.7 in plan mode (`/bet-plan-phase`, `/bet-discuss-phase`) and switches to Sonnet 4.6 for execution (`/bet-execute`). Best reasoning where it matters, lower cost during code generation. |
+| `effortLevel: xhigh` | Default on Opus 4.7. Best balance of reasoning depth and token spend for agentic coding tasks. |
+| `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` | Sub-agents (`reviewer`, `tester`) inherit Sonnet by default — frontmatter `model:` overrides this per-agent (e.g., `security` keeps Opus). |
+
+**1M context window** is included automatically on Max, Team, and Enterprise plans. To force it on Pro/API: `/model opus[1m]`. The phase-isolated `.planning/` strategy still helps focus the agent, but the 1M window means SUMMARY.md files no longer need to be aggressively trimmed.
+
+> **Note:** Opus 4.7 always uses adaptive reasoning. `MAX_THINKING_TOKENS` and `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` have no effect on it — control reasoning depth via `effortLevel` or `/effort` instead.
+
+---
+
 ## Requirements
 
-- [Claude Code CLI](https://claude.ai/claude-code)
+- [Claude Code CLI](https://claude.ai/claude-code) v2.1.111+ (required for Opus 4.7)
 - Git
 - A project with `develop` and `main` branches (GitFlow)
 - Optional: `gh` CLI for PR creation, Jira MCP for ticket integration
