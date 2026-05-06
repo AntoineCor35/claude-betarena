@@ -42,18 +42,26 @@ Run this in your project root:
 npx claude-betarena
 ```
 
-This installs:
-- 16 slash commands in `.claude/commands/`
-- 3 subagents in `.claude/agents/` (reviewer, tester, security)
-- 3 hook scripts in `.claude/hooks/` (branch guard, auto-lint, session context)
-- `.claude/settings.json` (shared team permissions and hooks)
-- `CLAUDE.md` and `CONTRIBUTING.md` (conventions)
+This installs, into the project:
 
-To overwrite existing files:
+- `.claude/commands/` — 16 slash commands (`/bet-*`)
+- `.claude/agents/` — 3 subagents (reviewer, tester, security) using the Writer/Reviewer pattern
+- `.claude/output-styles/betarena-professor.md` — native Professor Mode output style
+- `.claude/skills/betarena-conventions/SKILL.md` — auto-triggered conventions guide (commit format, branch naming, Task runner rule, DoD)
+- `.claude/hooks/` — shell + Node hooks (branch guard, post-edit lint, session context, block protected-branch commit, suggest refresh after pull)
+- `.claude/settings.json` — shared team permissions and wires the hooks
+- `CLAUDE.md`, `CONTRIBUTING.md` (root) — agent rules and team conventions
+- `.planning/` added to `.gitignore`
+
+All non-destructive: existing files are skipped unless you pass `--force`.
+
+To pull in updates safely after a package upgrade:
 
 ```bash
-npx claude-betarena --force
+npx claude-betarena update
 ```
+
+Shows what's outdated/missing and asks per-file (or `[a]ll`) before touching anything. Prefer this over `--force`.
 
 ### 2. Onboard (one-time)
 
@@ -120,6 +128,7 @@ Repeat until all phases are done. The last phase is always **tests**.
 | `/bet-plan-phase <N> [prof]` | Create detailed technical plan for a phase |
 | `/bet-execute <N> [prof]` | Implement the phase code |
 | `/bet-next` | Advance to the next phase |
+| `/bet-pause` | Save a session handoff before stopping (HANDOFF.md) — re-read at next `/bet-progress` |
 | `/bet-progress` | Resume a session with full contextual briefing |
 | `/bet-switch [slug]` | Switch between parallel features |
 
@@ -312,23 +321,24 @@ If the Atlassian MCP is installed during onboarding:
 
 BetArena enforces the conventions defined in `CONTRIBUTING.md`:
 
-**Commits:** `<type>(<scope>): <description>`
+**Commits:** `<type>(<scope>): <description>` — types: `feat, fix, docs, style, refactor, test, chore` — scopes: `mobile, backend, shared, landing, ci, docs`
 ```
-feat(front): add user login page
-fix(back): resolve null pointer on bet creation
-test(back): add unit tests for auth service
+feat(backend): add bet resolution service
+fix(mobile): resolve wallet balance refresh bug
+test(shared): add unit tests for odds calculator
 ```
 
-**PRs:** `[<SCOPE>] <Description>`
+**PRs:** `[<SCOPE>] BA-XXX <Description>` — squash merge, CI verte requise, 1 approbation min
 ```
-[FRONT] Add user authentication system
-[BACK] Fix bet creation pipeline
+[BACKEND] BA-123 Add bet placement endpoint
+[MOBILE] BA-456 Fix wallet balance refresh
 ```
 
 **Branches:**
 ```
-feature/user-auth      -> merges to develop
-hotfix/login-crash     -> merges to main
+feature/BA-123-add-bet-placement     → merges to develop
+fix/BA-789-wallet-balance-error      → merges to develop
+develop                              → merges to main (release)
 ```
 
 The agent **never commits without your approval** and **never pushes to protected branches** (enforced by hooks).

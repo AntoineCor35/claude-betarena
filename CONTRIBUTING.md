@@ -1,108 +1,191 @@
 # Contributing
 
-Thank you for contributing to BetArena 🎉
-
-Please follow these simple rules to keep the project clean and organized.
+Source de vérité des conventions BetArena (commits, PRs, branches, code). Pour la méthodologie projet complète — Scrum, Definition of Done, CI/CD, stratégie de test — se référer au **Plan Qualité** (`docs/quality-plan.md`).
 
 ---
 
-## Table of Contents
+## Sommaire
 
-1. [Branch Protection](#1-branch-protection)
-2. [GitFlow Workflow](#2-gitflow-workflow)
-3. [Commit Messages](#3-commit-messages)
+1. [Branch protection](#1-branch-protection)
+2. [Git Flow simplifié](#2-git-flow-simplifié)
+3. [Commits — Conventional Commits](#3-commits--conventional-commits)
 4. [Pull Requests](#4-pull-requests)
-5. [React Native Conventions](#5-react-native-conventions)
-6. [Code Organization](#6-code-organization)
+5. [Code](#5-code)
+6. [Langue](#6-langue)
+7. [React Native Conventions](#7-react-native-conventions)
+8. [Code Organization](#8-code-organization)
+9. [Exceptions](#9-exceptions)
 
 ---
 
-## 1. Branch Protection
+## 1. Branch protection
 
-Do **NOT** commit directly to `main` or `develop`.
-
-All changes must go through branches and Pull Requests (PRs).
+`main` et `develop` sont protégées. **Aucun commit direct.** Toute modification passe par une branche dédiée et une Pull Request.
 
 ---
 
-## 2. GitFlow Workflow
+## 2. Git Flow simplifié
 
-We follow the Git workflow named [GitFlow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow), please use the same workflow.
+```
+main ─────────────────────────────── Production stable
+  │
+  └── develop ──────────────────── Branche d'intégration
+        │
+        ├── feature/BA-123-bet-placement   ← Nouvelle feature
+        └── fix/BA-456-wallet-balance      ← Correction de bug
+```
 
-| Branch Type | Purpose                 | Merge Target |
-|-------------|-------------------------|--------------|
-| `feature/*` | New features            | `develop`    |
-| `hotfix/*`  | Urgent production fixes | `main`       |
+| Branche | Source | Cible (via PR) | Protection |
+|---------|--------|----------------|-----------|
+| `main` | — | — | PR depuis `develop`, CI verte, review approuvée |
+| `develop` | `main` | `main` | PR obligatoire, CI verte |
+| `feature/BA-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
+| `fix/BA-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
+
+**Nommage** : `<type>/BA-<ticket>-<kebab-name>`
+- `BA-XXX` = ID du ticket Jira (obligatoire si un ticket existe)
+- `<kebab-name>` : minuscules, tirets, pas d'espaces, pas d'accents
+- Exemples : `feature/BA-123-add-bet-placement`, `fix/BA-789-resolve-wallet-bug`
 
 ---
 
-## 3. Commit Messages
+## 3. Commits — Conventional Commits
 
-We use conventional commit messages: `<type>(<scope>): <description>`
+Format : `<type>(<scope>): <description>`
 
-* **type** can be: [Conventional Commit Messages - Types](https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13#types)
-* **scope** can be: `global`, `front`, `back`, `mobile`, `data`, `db`
+```
+<type>(<scope>): <description>
 
-### Examples
+[optional body]
+[optional footer]
+```
 
-- `feat(front): add user login page`
-- `fix(back): resolve null pointer on bet creation`
-- `chore(db): add migration for odds table`
-- `refactor(mobile): extract bet card component`
-- `docs(global): update README setup instructions`
-- `test(back): add unit tests for auth service`
+### Types
+
+| Type | Usage |
+|------|-------|
+| `feat` | Nouvelle fonctionnalité |
+| `fix` | Correction de bug |
+| `docs` | Documentation uniquement |
+| `style` | Formatage (pas de changement de logique) |
+| `refactor` | Refactoring (pas de changement fonctionnel) |
+| `test` | Ajout/modification de tests |
+| `chore` | Maintenance, CI/CD, dépendances |
+
+### Scopes
+
+| Scope | Périmètre |
+|-------|-----------|
+| `mobile` | App React Native / Expo |
+| `backend` | API, logique métier, services |
+| `shared` | Code partagé (types, utils, contrats) |
+| `landing` | Site landing |
+| `ci` | Pipeline CI/CD, GitHub Actions |
+| `docs` | Documentation, livrables Epitech |
+
+### Règles
+
+- Description en **anglais**, présent, impératif, minuscule, sans point final
+- Lignes du body < 80 caractères
+- Footer optionnel (`BREAKING CHANGE:`, `Refs: BA-XXX`, etc.)
+
+### Exemples
+
+- `feat(backend): add bet resolution service`
+- `fix(mobile): resolve wallet balance refresh bug`
+- `test(shared): add unit tests for odds calculator`
+- `docs(landing): update hero section copy`
+- `chore(ci): bump GitHub Actions to v4`
+- `refactor(backend): extract auth middleware`
 
 ---
 
 ## 4. Pull Requests
 
-Pull Requests (PRs) are mandatory for any integration into the main branches of the project:
-- `feature/*` → `develop`
-- `develop` → `main`
-- `hotfix/*` → `main`
+Toute fusion vers `develop` ou `main` passe par une PR.
 
-PRs ensure that:
-- the project history stays clean and traceable,
-- automated tests and CI/CD pipelines run correctly.
+### Titre
 
-Additionally, PR titles should follow this schema: `[<SCOPE>] <Description>`
-* **scope** can be: `GLOBAL`, `FRONT`, `BACK`, `MOBILE`, `DATA`, `DB`
+Format : `[<SCOPE>] BA-XXX <Description>`
 
-The author must:
-* Fill the description
-* Assign the PR to themselves
-* Add the corresponding labels to facilitate tracking and review.
+- **Scope uppercase** : `MOBILE`, `BACKEND`, `SHARED`, `LANDING`, `CI`, `DOCS`
+- **BA-XXX** : ticket Jira (omettre si pas de ticket associé)
+
+Exemples :
+- `[BACKEND] BA-123 Add bet placement endpoint`
+- `[MOBILE] BA-456 Fix wallet balance refresh`
+- `[CI] Update Node version to 20`
+
+### Description
+
+La description **doit** contenir :
+
+```markdown
+## What does this PR do?
+<1-2 sentences>
+
+## Jira
+BA-XXX (or "N/A")
+
+## How to test
+1. <step>
+2. <step>
+3. Expected: <...>
+
+## Screenshots
+<if UI changes — otherwise "N/A">
+
+## Tests
+- [ ] CI passes (lint + tests)
+- [ ] New tests added: <list>
+- [ ] Existing tests pass
+
+## Notes
+<trade-offs, known limits, follow-ups — or "None">
+```
+
+### Auteur
+
+L'auteur **doit** :
+- Remplir la description (jamais vide)
+- S'assigner la PR
+- Ajouter le composant Jira en label
 
 ### Reviewers
 
-Reviewers are **optional**, only add one if you specifically want someone to look at your changes.
+- **Minimum 1 approbation** de l'équipe pour toute PR
+- PRs **vers `main`** doivent inclure : **Antoine Cormier** + **Maxence Guidez**
 
-However, PRs targeting `main` **must** include at minimum:
-- Antoine Cormier
-- Maxence Guidez
+### Merge
 
-### Examples
-
-- `[FRONT] Add user login page`
-- `[BACK] Fix null pointer on bet creation`
-- `[DB] Add migration for odds table`
-- `[MOBILE] Refactor bet card component`
-- `[GLOBAL] Update CI/CD pipeline configuration`
-
-### Exceptions
-
-Update merges don’t require a Pull Request.
-If you’re only updating your local branch with the latest changes from another branch (for example, keeping your feature branch up to date with develop), you can merge or rebase directly without opening a PR.
-
-Examples:
-- `develop` → `my-feature-branch` ✅ (no PR needed)
-- `main` → `hotfix/bug-123` ✅ (no PR needed)
-
-These merges don’t affect the main branches directly, so no formal review process is required.
+- **Squash merge** uniquement (un commit par PR sur la branche cible)
+- **CI verte obligatoire** (lint + tests)
+- Branche feature/fix **supprimée** après merge
 
 ---
 
-## 5. React Native Conventions
+## 5. Code
+
+- **TypeScript strict** sur tout le monorepo (mobile, backend, shared)
+- **ESLint + Prettier** : configs partagées (`@betarena/eslint-config`), formatage automatique au save
+- **Imports** : alias TypeScript (`@shared/`, `@services/`, etc.) — pas de chemins relatifs profonds
+- **Nommage** : `camelCase` (variables/fonctions), `PascalCase` (composants/types), `UPPER_SNAKE_CASE` (constantes)
+- **Fichiers** : un composant ou un service par fichier, nommé comme l'export principal
+- **Commentaires** : uniquement pour la logique non évidente. JSDoc pour les fonctions publiques de services. Pas de commentaires triviaux.
+
+---
+
+## 6. Langue
+
+| Contexte | Langue |
+|----------|--------|
+| Code (variables, fonctions, commentaires, commits) | **Anglais** |
+| Documentation projet, livrables Epitech, README | **Français** |
+| Documents techniques | **Français**, termes techniques en anglais quand approprié |
+
+---
+
+## 7. React Native Conventions
 
 ### File Naming
 
@@ -133,7 +216,7 @@ These merges don’t affect the main branches directly, so no formal review proc
 
 - Use `StyleSheet.create()` — always at the bottom of the file
 - Group styles logically: `container`, `header`, `content`, `footer`
-- Use the project’s theme/design tokens for colors, spacing, and fonts
+- Use the project's theme/design tokens for colors, spacing, and fonts
 - No inline styles except for truly dynamic values
 
 ### Assets
@@ -150,7 +233,7 @@ These merges don’t affect the main branches directly, so no formal review proc
 
 ---
 
-## 6. Code Organization
+## 8. Code Organization
 
 ### Recommended Structure
 
@@ -173,6 +256,22 @@ src/
 ### Rules
 
 - **One component per file.** The filename matches the export name.
-- **Colocate feature code.** If a component is only used by one screen, keep it in that feature’s folder.
+- **Colocate feature code.** If a component is only used by one screen, keep it in that feature's folder.
 - **Shared components** go in `src/components/shared/` only when used by 2+ features.
 - **No business logic in components.** Extract to hooks or services.
+
+---
+
+## 9. Exceptions
+
+Les merges de **mise à jour** ne nécessitent **pas** de PR :
+
+| Direction | PR ? |
+|-----------|------|
+| `develop` → `feature/BA-XXX-...` (sync de branche locale) | ❌ non requise |
+| `main` → `develop` (sync) | ❌ non requise |
+| `feature/*` → `develop` | ✅ obligatoire |
+| `fix/*` → `develop` | ✅ obligatoire |
+| `develop` → `main` | ✅ obligatoire |
+
+Ces sync ne modifient pas les branches protégées dans le sens "intégration", donc pas de revue formelle nécessaire.

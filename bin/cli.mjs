@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, chmodSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, chmodSync, statSync } from 'fs';
 import { resolve, join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,43 +27,39 @@ function error(msg) { console.log(`${RED}  ✗${RESET} ${msg}`); }
 
 function ask(question) {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => {
+  return new Promise((res) => {
     rl.question(`${CYAN}  ?${RESET} ${question} `, (answer) => {
       rl.close();
-      resolve(answer.trim().toLowerCase());
+      res(answer.trim().toLowerCase());
     });
   });
 }
 
 function ensureDir(dir) {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+}
+
+function sameContent(a, b) {
+  if (!existsSync(a) || !existsSync(b)) return false;
+  return readFileSync(a, 'utf-8') === readFileSync(b, 'utf-8');
+}
+
+function makeExecutable(path) {
+  try { chmodSync(path, 0o755); } catch { /* best effort */ }
+}
+
+function detectClaude() {
+  try {
+    execSync('claude --version', { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
   }
 }
 
-function installDir(srcDir, destDir, ext, label, force) {
-  if (!existsSync(srcDir)) return { installed: 0, skipped: 0 };
-  ensureDir(destDir);
-  const files = readdirSync(srcDir).filter(f => f.endsWith(ext));
-  let installed = 0;
-  let skipped = 0;
-
-  for (const file of files) {
-    const dest = join(destDir, file);
-    const name = file.replace(ext, '').replace('bet-', '/bet-');
-
-    if (existsSync(dest) && !force) {
-      skip(`${name} already exists`);
-      skipped++;
-    } else {
-      copyFileSync(join(srcDir, file), dest);
-      if (ext === '.sh') chmodSync(dest, 0o755);
-      success(`${name}`);
-      installed++;
-    }
-  }
-
-  return { installed, skipped };
+function isGitRepo(dir) {
+  // .git can be a directory (normal repo) or a file (worktree). Either counts.
+  return existsSync(join(dir, '.git'));
 }
 
 function addToGitignore(projectDir) {
@@ -71,14 +68,10 @@ function addToGitignore(projectDir) {
 
   if (existsSync(gitignorePath)) {
     let content = readFileSync(gitignorePath, 'utf-8');
-    let added = [];
-
+    const added = [];
     for (const entry of entries) {
-      if (!content.includes(entry)) {
-        added.push(entry);
-      }
+      if (!content.includes(entry)) added.push(entry);
     }
-
     if (added.length > 0) {
       content = content.trimEnd() + '\n\n# BetArena (agent-internal)\n' + added.join('\n') + '\n';
       writeFileSync(gitignorePath, content);
@@ -92,100 +85,132 @@ function addToGitignore(projectDir) {
   }
 }
 
-async function main() {
-  const args = process.argv.slice(2);
-  const command = args[0] || 'init';
+function showHelp() {
+  log();
+  log(`${BOLD}claude-betarena${RESET} — Install/update the BetArena workflow for Claude Code`);
+  log();
+  log(`${BOLD}Usage:${RESET}`);
+  log(`  npx claude-betarena              Install in the current directory (skips existing files)`);
+  log(`  npx claude-betarena --force      Overwrite ALL existing files without asking`);
+  log(`  npx claude-betarena update       Show diffs and update outdated files (per-file consent)`);
+  log(`  npx claude-betarena --help       Show this help`);
+  log();
+  log(`${BOLD}What gets installed:${RESET}`);
+  log(`  1. Slash commands       → .claude/commands/        (16 /bet-* commands)`);
+  log(`  2. Subagents            → .claude/agents/          (reviewer, tester, security)`);
+  log(`  3. Output styles        → .claude/output-styles/   (betarena-professor)`);
+  log(`  4. Skills               → .claude/skills/          (betarena-conventions)`);
+  log(`  5. Hooks                → .claude/hooks/           (shell + Node)`);
+  log(`  6. Settings + hooks     → .claude/settings.json    (asks before overwrite)`);
+  log(`  7. CLAUDE.md            → project root             (asks before overwrite)`);
+  log(`  8. CONTRIBUTING.md      → project root             (only if missing)`);
+  log(`  9. .gitignore           → adds .planning/ and .claude/settings.local.json`);
+  log();
+  log(`${BOLD}After install:${RESET}`);
+  log(`  Run ${CYAN}claude${RESET} in the project, then ${CYAN}/bet-onboarding${RESET}.`);
+  log();
+}
 
-  if (command === '--help' || command === '-h') {
-    log();
-    log(`${BOLD}claude-betarena${RESET} — Install the BetArena workflow for Claude Code`);
-    log();
-    log(`${BOLD}Usage:${RESET}`);
-    log(`  npx claude-betarena              Install in the current directory`);
-    log(`  npx claude-betarena --force      Overwrite existing files`);
-    log(`  npx claude-betarena --help       Show this help`);
-    log();
-    log(`${BOLD}What it does:${RESET}`);
-    log(`  1. Copies slash commands to .claude/commands/`);
-    log(`  2. Copies subagents to .claude/agents/`);
-    log(`  3. Copies hook scripts to .claude/hooks/`);
-    log(`  4. Creates .claude/settings.json (shared team config)`);
-    log(`  5. Creates CLAUDE.md with agent rules (if missing)`);
-    log(`  6. Creates CONTRIBUTING.md with conventions (if missing)`);
-    log(`  7. Adds .planning/ and .claude/settings.local.json to .gitignore`);
-    log();
-    log(`${BOLD}After install:${RESET}`);
-    log(`  Open Claude Code and run /bet-onboarding`);
-    log();
-    return;
+// Iterate every flat-bucket file under templates/ that should land under .claude/
+function* iterFlatAssets() {
+  const buckets = [
+    { src: 'commands',      dest: '.claude/commands',      filter: (f) => f.endsWith('.md') },
+    { src: 'agents',        dest: '.claude/agents',        filter: (f) => f.endsWith('.md') },
+    { src: 'output-styles', dest: '.claude/output-styles', filter: (f) => f.endsWith('.md') },
+    { src: 'hooks',         dest: '.claude/hooks',         filter: (f) => f.endsWith('.sh') || f.endsWith('.mjs') },
+  ];
+  for (const b of buckets) {
+    const srcDir = join(TEMPLATES, b.src);
+    if (!existsSync(srcDir)) continue;
+    for (const f of readdirSync(srcDir)) {
+      if (!b.filter(f)) continue;
+      const srcFile = join(srcDir, f);
+      if (!statSync(srcFile).isFile()) continue;
+      yield { srcFile, destFile: join(b.dest, f), bucket: b.src };
+    }
   }
+}
 
-  const force = args.includes('--force');
+// Skills are nested: templates/skills/<name>/SKILL.md (+ optional sub-files)
+function* iterSkills() {
+  const skillsRoot = join(TEMPLATES, 'skills');
+  if (!existsSync(skillsRoot)) return;
+  function* walk(dir, relParts) {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const st = statSync(full);
+      if (st.isDirectory()) yield* walk(full, [...relParts, entry]);
+      else if (st.isFile()) yield { full, rel: [...relParts, entry] };
+    }
+  }
+  for (const { full, rel } of walk(skillsRoot, [])) {
+    yield { srcFile: full, destFile: join('.claude/skills', ...rel), bucket: 'skills' };
+  }
+}
+
+function* iterClaudeAssets() {
+  yield* iterFlatAssets();
+  yield* iterSkills();
+}
+
+async function runInit(force) {
   const projectDir = process.cwd();
 
   log();
   log(`${BOLD}━━━ BetArena Workflow Installer v2 ━━━${RESET}`);
   log();
   info(`Installing in: ${DIM}${projectDir}${RESET}`);
+
+  if (!isGitRepo(projectDir)) {
+    warn('This directory is not a git repository. The workflow assumes git (commits, branches, PRs).');
+    warn(`Run ${BOLD}git init${RESET} now if this is intentional, or re-run claude-betarena from your repo root.`);
+  }
   log();
 
-  // 1. Commands
-  log(`${BOLD}Commands${RESET}`);
-  const cmdResult = installDir(
-    join(TEMPLATES, 'commands'),
-    join(projectDir, '.claude', 'commands'),
-    '.md', 'commands', force
-  );
-  log(`  ${DIM}${cmdResult.installed} installed, ${cmdResult.skipped} skipped${RESET}`);
+  // 1. .claude assets (commands, agents, output-styles, skills, hooks)
+  log(`${BOLD}Slash commands, subagents, output styles, skills, hooks${RESET}`);
+  let installed = 0, skipped = 0;
+  for (const { srcFile, destFile, bucket } of iterClaudeAssets()) {
+    const dest = join(projectDir, destFile);
+    ensureDir(dirname(dest));
+    if (existsSync(dest) && !force) {
+      skip(`${destFile}`);
+      skipped++;
+    } else {
+      copyFileSync(srcFile, dest);
+      if (bucket === 'hooks') makeExecutable(dest);
+      success(`${destFile}`);
+      installed++;
+    }
+  }
+  log(`  ${DIM}${installed} installed, ${skipped} skipped${RESET}`);
   log();
 
-  // 2. Agents
-  log(`${BOLD}Agents${RESET}`);
-  const agentResult = installDir(
-    join(TEMPLATES, 'agents'),
-    join(projectDir, '.claude', 'agents'),
-    '.md', 'agents', force
-  );
-  log(`  ${DIM}${agentResult.installed} installed, ${agentResult.skipped} skipped${RESET}`);
-  log();
-
-  // 3. Hooks
-  log(`${BOLD}Hooks${RESET}`);
-  const hookResult = installDir(
-    join(TEMPLATES, 'hooks'),
-    join(projectDir, '.claude', 'hooks'),
-    '.sh', 'hooks', force
-  );
-  log(`  ${DIM}${hookResult.installed} installed, ${hookResult.skipped} skipped${RESET}`);
-  log();
-
-  // 4. Settings
+  // 2. settings.json — prompt before overwrite (it likely has user hooks merged in)
   log(`${BOLD}Settings${RESET}`);
   const settingsSrc = join(TEMPLATES, 'settings.json');
   const settingsDest = join(projectDir, '.claude', 'settings.json');
-
+  ensureDir(dirname(settingsDest));
   if (existsSync(settingsSrc)) {
     if (existsSync(settingsDest) && !force) {
       const answer = await ask('settings.json already exists. Overwrite? (yes/no)');
       if (answer === 'yes' || answer === 'y') {
         copyFileSync(settingsSrc, settingsDest);
-        success('settings.json overwritten');
+        success('settings.json overwritten (PreToolUse / PostToolUse / SessionStart hooks wired)');
       } else {
-        skip('settings.json kept as-is');
+        skip('settings.json kept as-is. To pull in updated hooks, run `npx claude-betarena update`.');
       }
     } else {
-      ensureDir(join(projectDir, '.claude'));
       copyFileSync(settingsSrc, settingsDest);
-      success('settings.json created');
+      success('settings.json created (PreToolUse / PostToolUse / SessionStart hooks wired)');
     }
   }
   log();
 
-  // 5. CLAUDE.md
+  // 3. CLAUDE.md
   log(`${BOLD}Configuration${RESET}`);
   const claudeMdSrc = join(TEMPLATES, 'CLAUDE.md');
   const claudeMdDest = join(projectDir, 'CLAUDE.md');
-
   if (existsSync(claudeMdDest) && !force) {
     const answer = await ask('CLAUDE.md already exists. Overwrite? (yes/no)');
     if (answer === 'yes' || answer === 'y') {
@@ -199,10 +224,9 @@ async function main() {
     success('CLAUDE.md created');
   }
 
-  // 6. CONTRIBUTING.md
+  // 4. CONTRIBUTING.md
   const contributingSrc = join(TEMPLATES, 'CONTRIBUTING.md');
   const contributingDest = join(projectDir, 'CONTRIBUTING.md');
-
   if (existsSync(contributingDest) && !force) {
     skip('CONTRIBUTING.md already exists — kept as-is');
   } else {
@@ -210,29 +234,140 @@ async function main() {
     success('CONTRIBUTING.md created');
   }
 
-  // 7. .gitignore
+  // 5. .gitignore
   addToGitignore(projectDir);
   log();
 
-  // 8. Summary
+  // Summary
   log(`${BOLD}${GREEN}Installation complete!${RESET}`);
   log();
-  log(`${BOLD}What was installed:${RESET}`);
-  log(`  ${CYAN}Commands${RESET}   ${cmdResult.installed} slash commands in .claude/commands/`);
-  log(`  ${CYAN}Agents${RESET}     ${agentResult.installed} subagents in .claude/agents/ (reviewer, tester, security)`);
-  log(`  ${CYAN}Hooks${RESET}      ${hookResult.installed} hook scripts in .claude/hooks/ (branch protection, auto-lint, session context)`);
-  log(`  ${CYAN}Settings${RESET}   .claude/settings.json (shared team permissions & hooks)`);
-  log();
+
+  const claudeReady = detectClaude();
+
   log(`${BOLD}Next steps:${RESET}`);
-  log(`  1. Open Claude Code in this project`);
-  log(`  2. Run ${CYAN}/bet-onboarding${RESET} to set up your identity and audit the codebase`);
-  log(`  3. Run ${CYAN}/bet-new-feature <name>${RESET} to start your first feature`);
+  if (claudeReady) {
+    log(`  1. Run ${CYAN}claude${RESET} in this directory to start Claude Code`);
+  } else {
+    log(`  1. Install Claude Code first: ${CYAN}npm install -g @anthropic-ai/claude-code${RESET}`);
+    log(`     Then run ${CYAN}claude${RESET} in this directory to start it`);
+  }
+  log(`  2. ${YELLOW}First launch:${RESET} Claude Code will ask you to approve the hooks in`);
+  log(`     ${DIM}.claude/settings.json${RESET}. ${BOLD}Accept them${RESET} — they enforce the BetArena Golden Rules`);
+  log(`     (block direct commits to main/develop, auto-lint, suggest /bet-refresh after pull, etc.).`);
+  log(`  3. Run ${CYAN}/bet-onboarding${RESET} to set up your identity and audit the codebase`);
+  log(`  4. Run ${CYAN}/bet-new-feature <name>${RESET} to start your first feature`);
   log();
-  log(`${DIM}All commands: /bet-onboarding, /bet-new-feature, /bet-discuss-phase,`);
-  log(`/bet-plan-phase, /bet-execute, /bet-commit, /bet-next, /bet-progress,`);
-  log(`/bet-pr, /bet-doc, /bet-prof, /bet-branch, /bet-refresh, /bet-review,`);
-  log(`/bet-switch, /bet-docker${RESET}`);
+  log(`  Tip: ${CYAN}/output-style betarena-professor${RESET} for Professor Mode globally,`);
+  log(`       or add ${CYAN}prof${RESET} to any /bet-* command for one-shot pedagogy.`);
   log();
+  log(`  ${DIM}Requires Node.js (installed: ${process.versions.node}, minimum: 16)${RESET}`);
+  log();
+}
+
+async function runUpdate() {
+  const projectDir = process.cwd();
+  log();
+  log(`${BOLD}━━━ BetArena Workflow Updater ━━━${RESET}`);
+  log();
+  info(`Scanning: ${DIM}${projectDir}${RESET}`);
+  log();
+
+  // Build candidates: files that exist locally and differ, OR don't exist locally yet.
+  const candidates = [];
+  for (const { srcFile, destFile, bucket } of iterClaudeAssets()) {
+    const dest = join(projectDir, destFile);
+    if (!existsSync(dest)) {
+      candidates.push({ srcFile, dest, destFile, bucket, kind: 'new' });
+    } else if (!sameContent(srcFile, dest)) {
+      candidates.push({ srcFile, dest, destFile, bucket, kind: 'changed' });
+    }
+  }
+
+  // Root files (CLAUDE.md, CONTRIBUTING.md) and settings.json — also surfaced.
+  const rootCandidates = [
+    { name: 'CLAUDE.md', src: join(TEMPLATES, 'CLAUDE.md'), bucket: 'root' },
+    { name: 'CONTRIBUTING.md', src: join(TEMPLATES, 'CONTRIBUTING.md'), bucket: 'root' },
+    { name: '.claude/settings.json', src: join(TEMPLATES, 'settings.json'), bucket: 'settings' },
+  ];
+  for (const r of rootCandidates) {
+    if (!existsSync(r.src)) continue;
+    const dest = join(projectDir, r.name);
+    if (!existsSync(dest)) {
+      candidates.push({ srcFile: r.src, dest, destFile: r.name, bucket: r.bucket, kind: 'new' });
+    } else if (!sameContent(r.src, dest)) {
+      candidates.push({ srcFile: r.src, dest, destFile: r.name, bucket: r.bucket, kind: 'changed' });
+    }
+  }
+
+  if (candidates.length === 0) {
+    success('Everything is up to date.');
+    log();
+    return;
+  }
+
+  log(`${BOLD}Outdated or missing files (${candidates.length}):${RESET}`);
+  for (const c of candidates) {
+    const tag = c.kind === 'new' ? `${YELLOW}new${RESET}    ` : `${CYAN}changed${RESET}`;
+    log(`  ${tag}  ${c.destFile}`);
+  }
+  log();
+
+  const choice = await ask('Update [a]ll, [s]elect file by file, or [c]ancel?');
+  if (choice === 'c' || choice === 'cancel' || choice === '') {
+    skip('Update cancelled.');
+    return;
+  }
+
+  const apply = (c) => {
+    ensureDir(dirname(c.dest));
+    copyFileSync(c.srcFile, c.dest);
+    if (c.bucket === 'hooks') makeExecutable(c.dest);
+  };
+
+  if (choice === 'a' || choice === 'all') {
+    for (const c of candidates) {
+      apply(c);
+      success(`updated ${c.destFile}`);
+    }
+    log();
+    log(`${BOLD}${GREEN}Update complete.${RESET}`);
+    log();
+    return;
+  }
+
+  // Per-file consent
+  for (const c of candidates) {
+    const verb = c.kind === 'new' ? 'install' : 'update';
+    const ans = await ask(`${verb} ${c.destFile}? (y/n)`);
+    if (ans === 'y' || ans === 'yes') {
+      apply(c);
+      success(`${verb}d ${c.destFile}`);
+    } else {
+      skip(`kept ${c.destFile}`);
+    }
+  }
+  log();
+  log(`${BOLD}${GREEN}Done.${RESET}`);
+  log();
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0];
+
+  if (command === '--help' || command === '-h') {
+    showHelp();
+    return;
+  }
+
+  if (command === 'update') {
+    await runUpdate();
+    return;
+  }
+
+  // Default: init mode (with optional --force)
+  const force = args.includes('--force');
+  await runInit(force);
 }
 
 main().catch((err) => {

@@ -32,6 +32,10 @@
             "type": "command",
             "command": "bash .claude/hooks/pre-bash-guard.sh",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-protected-branch.mjs\""
           }
         ]
       }
@@ -44,6 +48,15 @@
             "type": "command",
             "command": "bash .claude/hooks/post-edit-lint.sh",
             "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/suggest-refresh-after-pull.mjs\""
           }
         ]
       }
