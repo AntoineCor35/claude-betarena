@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, chmodSync, statSync } from 'fs';
+import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, readdirSync, chmodSync, statSync, rmSync } from 'fs';
 import { resolve, join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
@@ -93,6 +93,7 @@ function showHelp() {
   log(`  npx claude-betarena              Install in the current directory (skips existing files)`);
   log(`  npx claude-betarena --force      Overwrite ALL existing files without asking`);
   log(`  npx claude-betarena update       Show diffs and update outdated files (per-file consent)`);
+  log(`  npx claude-betarena uninstall    Remove BetArena from the project (interactive)`);
   log(`  npx claude-betarena --help       Show this help`);
   log();
   log(`${BOLD}What gets installed:${RESET}`);
@@ -351,6 +352,130 @@ async function runUpdate() {
   log();
 }
 
+async function runUninstall(yes) {
+  const projectDir = process.cwd();
+  log();
+  log(`${BOLD}━━━ BetArena Workflow Uninstaller ━━━${RESET}`);
+  log();
+  info(`Working in: ${DIM}${projectDir}${RESET}`);
+  log();
+
+  const claudeDir       = join(projectDir, '.claude');
+  const planningDir     = join(projectDir, '.planning');
+  const claudeMd        = join(projectDir, 'CLAUDE.md');
+  const contributingMd  = join(projectDir, 'CONTRIBUTING.md');
+  const mcpJson         = join(projectDir, '.mcp.json');
+  const gitignorePath   = join(projectDir, '.gitignore');
+
+  const present = {
+    claude:       existsSync(claudeDir),
+    planning:     existsSync(planningDir),
+    claudeMd:     existsSync(claudeMd),
+    contributing: existsSync(contributingMd),
+    mcp:          existsSync(mcpJson),
+    gitignore:    existsSync(gitignorePath) && /(^|\n)\.planning\/|(^|\n)\.claude\//.test(readFileSync(gitignorePath, 'utf-8')),
+  };
+
+  const anything = Object.values(present).some(Boolean);
+  if (!anything) {
+    info('Nothing to remove — BetArena is not installed in this directory.');
+    log();
+    return;
+  }
+
+  log(`${BOLD}What this will do:${RESET}`);
+  log(`  .claude/        ${present.claude        ? `${RED}REMOVE${RESET}` : `${DIM}absent${RESET}`}`);
+  log(`  .planning/      ${present.planning      ? `${YELLOW}ASK${RESET} ${DIM}(may contain unsaved planning)${RESET}` : `${DIM}absent${RESET}`}`);
+  log(`  CLAUDE.md       ${present.claudeMd      ? `${YELLOW}ASK${RESET} ${DIM}(may have edits)${RESET}` : `${DIM}absent${RESET}`}`);
+  log(`  CONTRIBUTING.md ${present.contributing  ? `${YELLOW}ASK${RESET} ${DIM}(team conventions)${RESET}` : `${DIM}absent${RESET}`}`);
+  log(`  .mcp.json       ${present.mcp           ? `${YELLOW}ASK${RESET} ${DIM}(contains your token!)${RESET}` : `${DIM}absent${RESET}`}`);
+  log(`  .gitignore      ${present.gitignore     ? `${CYAN}clean BetArena entries${RESET}` : `${DIM}no entries${RESET}`}`);
+  log();
+
+  if (!yes) {
+    const ans = await ask('Proceed with uninstall? (yes / no)');
+    if (!['yes', 'y'].includes(ans)) {
+      skip('Uninstall cancelled — nothing was changed.');
+      log();
+      return;
+    }
+  }
+
+  // 1. .claude/ — direct removal (it's all package-installed content)
+  if (present.claude) {
+    rmSync(claudeDir, { recursive: true, force: true });
+    success('removed .claude/');
+  }
+
+  // 2. .planning/ — ASK (may contain user work in progress)
+  if (present.planning) {
+    const ans = yes ? 'yes' : await ask('Remove .planning/? It may contain in-progress feature plans, tracking, or handoffs. (yes / no)');
+    if (['yes', 'y'].includes(ans)) {
+      rmSync(planningDir, { recursive: true, force: true });
+      success('removed .planning/');
+    } else {
+      skip('kept .planning/');
+    }
+  }
+
+  // 3. CLAUDE.md — ASK
+  if (present.claudeMd) {
+    const ans = yes ? 'yes' : await ask('Remove CLAUDE.md? (yes / no)');
+    if (['yes', 'y'].includes(ans)) {
+      rmSync(claudeMd);
+      success('removed CLAUDE.md');
+    } else {
+      skip('kept CLAUDE.md');
+    }
+  }
+
+  // 4. CONTRIBUTING.md — ASK (often has team-specific edits)
+  if (present.contributing) {
+    const ans = yes ? 'yes' : await ask('Remove CONTRIBUTING.md? It often holds team-specific conventions you may want to keep. (yes / no)');
+    if (['yes', 'y'].includes(ans)) {
+      rmSync(contributingMd);
+      success('removed CONTRIBUTING.md');
+    } else {
+      skip('kept CONTRIBUTING.md');
+    }
+  }
+
+  // 5. .mcp.json — ASK (contains the user's token in clear)
+  if (present.mcp) {
+    const ans = yes ? 'yes' : await ask('Remove .mcp.json? It contains your Atlassian API token in clear text. (yes / no)');
+    if (['yes', 'y'].includes(ans)) {
+      rmSync(mcpJson);
+      success('removed .mcp.json');
+    } else {
+      skip('kept .mcp.json');
+    }
+  }
+
+  // 6. .gitignore — strip BetArena entries (keep the rest)
+  if (present.gitignore) {
+    const before = readFileSync(gitignorePath, 'utf-8');
+    let after = before;
+    // Remove the comment line + any of our known entries that follow it
+    after = after.replace(/\n?# BetArena[^\n]*\n(?:\.[^\n]+\n)*/g, '');
+    // Also remove standalone .planning/ and .claude/ lines anywhere
+    after = after.split('\n').filter((line) => {
+      const t = line.trim();
+      return !['.planning/', '.claude/', '.claude/settings.local.json', '.mcp.json'].includes(t);
+    }).join('\n');
+    if (after !== before) {
+      writeFileSync(gitignorePath, after.replace(/\n{3,}/g, '\n\n').trimEnd() + '\n');
+      success('cleaned BetArena entries from .gitignore');
+    } else {
+      skip('no BetArena entries to clean from .gitignore');
+    }
+  }
+
+  log();
+  log(`${BOLD}${GREEN}Uninstall complete.${RESET}`);
+  log(`  ${DIM}Tip: run ${CYAN}npx claude-betarena${RESET}${DIM} again any time to re-install.${RESET}`);
+  log();
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const command = args[0];
@@ -362,6 +487,12 @@ async function main() {
 
   if (command === 'update') {
     await runUpdate();
+    return;
+  }
+
+  if (command === 'uninstall' || command === 'remove') {
+    const yes = args.includes('--yes') || args.includes('-y');
+    await runUninstall(yes);
     return;
   }
 
