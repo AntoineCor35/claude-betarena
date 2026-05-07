@@ -200,14 +200,19 @@ Invocables via `/bet-review` (review code) ou `/bet-review security` (audit séc
 
 ## Atlassian (Jira + Confluence)
 
-Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` Phase 3.1 (interactif : domain, email, API token). Il expose Jira **et** Confluence via un seul serveur, dans le tenant `betarena.atlassian.net`.
+Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` Phase 3.1 — flow guidé pédagogique : explication du pattern, génération du token, ajout des variables d'environnement à ton shell rc, redémarrage de Claude Code.
+
+**Pattern de partage** :
+- `.mcp.json` est **committé en équipe** (config serveur partagée — ne contient aucun secret, juste des références `${ATLASSIAN_EMAIL}` et `${ATLASSIAN_API_TOKEN}`).
+- Chaque dev met **ses propres credentials** dans son shell rc (`~/.zshrc`, `~/.bashrc`, etc.). Personne n'a accès au token de personne.
+- Au démarrage, Claude Code expand les `${VAR}` du `.mcp.json` à partir des env vars du shell.
 
 Une fois actif :
 - `/bet-new-feature BA-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
 - Le skill `betarena-confluence` (`.claude/skills/betarena-confluence/SKILL.md`) s'auto-charge quand l'agent travaille sur un ticket, cherche la spec, ou résout un terme métier (consulte le glossaire Confluence)
 - `/bet-discuss-phase` et `/bet-plan-phase` peuvent proposer la création d'ADR (Architecture Decision Records) sur Confluence après accord explicite de l'utilisateur
 
-> `.mcp.json` est gitignoré (token en clair) — chaque coéquipier configure son setup via `/bet-onboarding`. Le serveur MCP utilise `uvx mcp-atlassian` ; installe `uv` au préalable (`brew install uv`).
+> Le serveur MCP utilise `uvx mcp-atlassian` ; installe `uv` au préalable (`brew install uv` sur macOS).
 
 ## Recommended Model Config
 
@@ -247,7 +252,7 @@ Le package `claude-betarena` installe, en plus des commandes :
 | Subagents | `.claude/agents/{reviewer,tester,security}.md` | Review code / écriture tests / audit sécurité en contexte frais |
 | Hooks | `.claude/hooks/*` | Garde-fous système : branch-guard, post-edit-lint, session-start, block-protected-branch, suggest-refresh-after-pull |
 | Config | `.claude/settings.json` | Câble les hooks et permissions partagées |
-| MCP Atlassian | `.mcp.json` (gitignored) | Configuration Jira + Confluence par utilisateur, générée par `/bet-onboarding` Phase 3.1 |
+| MCP Atlassian | `.mcp.json` (**committé** en équipe) | Configuration Jira + Confluence partagée. Référence `${ATLASSIAN_EMAIL}` et `${ATLASSIAN_API_TOKEN}` que chaque dev définit dans son shell rc. Généré par `/bet-onboarding` Phase 3.1 |
 
 ## Mise à jour du package installé
 

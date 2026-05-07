@@ -7,7 +7,15 @@ description: BetArena Atlassian (Jira + Confluence) integration helpers — load
 
 This skill is loaded when you need to consult Atlassian (Jira tickets, Confluence pages) on the BetArena project. The Atlassian MCP server (`mcp-atlassian`) must be configured in `.mcp.json` — set up via `/bet-onboarding` Phase 3.1.
 
-**If the MCP is not available** (no `mcp__atlassian__*` tools exposed): tell the user they need to run `/bet-onboarding` and configure Atlassian, then move on without it. Don't fail the parent command — best-effort.
+The `.mcp.json` is **committed in the team repo** but contains no secrets — it references `${ATLASSIAN_EMAIL}` and `${ATLASSIAN_API_TOKEN}` from the user's shell environment. If the MCP server is **not running** (auth fails, env vars missing, etc.) :
+
+1. Tell the user the variables may be missing in their shell. Suggest checking with :
+   ```bash
+   echo $ATLASSIAN_EMAIL
+   echo $ATLASSIAN_API_TOKEN
+   ```
+2. If empty, ask them to add them to their shell rc and reload — or to re-run `/bet-onboarding` and follow Phase 3.1 again.
+3. Move on **without** Atlassian if they can't fix it now (best-effort — never fail the parent command).
 
 ---
 

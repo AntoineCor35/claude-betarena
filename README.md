@@ -307,7 +307,16 @@ An example mobile CLAUDE.md is provided in `templates/examples/mobile-CLAUDE.md`
 
 ## Atlassian (Jira + Confluence)
 
-`/bet-onboarding` Phase 3.1 sets up the Atlassian MCP **interactively** — domain, email, API token in 3 questions. It writes `.mcp.json` (gitignored, per-user) and adds `.mcp.json` to `.gitignore` automatically. Restart Claude Code to activate the server.
+`/bet-onboarding` Phase 3.1 walks you through a **guided pedagogical setup** :
+
+1. Asks for your Atlassian domain (default `betarena`)
+2. Writes `.mcp.json` at the project root — **committed in the team repo** (no secrets, just `${ATLASSIAN_EMAIL}` and `${ATLASSIAN_API_TOKEN}` references)
+3. Walks you to the Atlassian token generation page, with a clear copy-paste flow
+4. Detects your shell (`zsh`/`bash`/`fish`) and tells you exactly which file to edit (`~/.zshrc`, `~/.bashrc`, etc.) and the 2 lines to add
+5. Verifies `uvx` is installed (instructs `brew install uv` if not)
+6. Asks you to restart Claude Code so the MCP server picks up your env vars
+
+**Sharing pattern** : the `.mcp.json` is committed (so the team owns the server config jointly), but each developer's credentials live only in their shell environment. Nobody sees anyone else's token.
 
 Once configured, you get:
 
@@ -319,8 +328,6 @@ Once configured, you get:
 | **ADR proposals** | `/bet-discuss-phase` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
 
 The Atlassian MCP server uses [`mcp-atlassian`](https://github.com/sooperset/mcp-atlassian) via `uvx` — install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) first (`brew install uv` on macOS).
-
-> Heads-up: the API token is stored in clear text in `.mcp.json`. The file is gitignored so it never leaves your machine. For an 8-person student team this is fine ; for a larger team consider switching to env-var expansion (`${ATLASSIAN_API_TOKEN}`) and shipping `.mcp.json` tracked.
 
 ---
 
