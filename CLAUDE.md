@@ -198,6 +198,17 @@ Trois agents spécialisés dans `.claude/agents/` exécutent en contexte frais :
 
 Invocables via `/bet-review` (review code) ou `/bet-review security` (audit sécurité).
 
+## Atlassian (Jira + Confluence)
+
+Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` Phase 3.1 (interactif : domain, email, API token). Il expose Jira **et** Confluence via un seul serveur, dans le tenant `betarena.atlassian.net`.
+
+Une fois actif :
+- `/bet-new-feature BA-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
+- Le skill `betarena-confluence` (`.claude/skills/betarena-confluence/SKILL.md`) s'auto-charge quand l'agent travaille sur un ticket, cherche la spec, ou résout un terme métier (consulte le glossaire Confluence)
+- `/bet-discuss-phase` et `/bet-plan-phase` peuvent proposer la création d'ADR (Architecture Decision Records) sur Confluence après accord explicite de l'utilisateur
+
+> `.mcp.json` est gitignoré (token en clair) — chaque coéquipier configure son setup via `/bet-onboarding`. Le serveur MCP utilise `uvx mcp-atlassian` ; installe `uv` au préalable (`brew install uv`).
+
 ## Recommended Model Config
 
 `model: opusplan` (Opus 4.7 en plan, Sonnet 4.6 en execute) avec `effortLevel: xhigh`. Les sub-agents déclarent leur propre modèle via frontmatter. Opus 4.7 utilise toujours le raisonnement adaptatif — contrôle la profondeur via `effortLevel` ou `/effort`, **pas** `MAX_THINKING_TOKENS` (déprécié). Minimum Claude Code : `2.1.111`.
@@ -232,9 +243,11 @@ Le package `claude-betarena` installe, en plus des commandes :
 |-------|--------|------|
 | Output style | `.claude/output-styles/betarena-professor.md` | Mode pédagogue activable via `/output-style betarena-professor` |
 | Skill | `.claude/skills/betarena-conventions/SKILL.md` | Auto-chargé quand l'agent va commit/PR/branch — rappelle les conventions sans relire les docs |
+| Skill | `.claude/skills/betarena-confluence/SKILL.md` | Auto-chargé quand l'agent travaille sur un ticket Jira / spec / glossaire métier — interagit avec le MCP Atlassian |
 | Subagents | `.claude/agents/{reviewer,tester,security}.md` | Review code / écriture tests / audit sécurité en contexte frais |
 | Hooks | `.claude/hooks/*` | Garde-fous système : branch-guard, post-edit-lint, session-start, block-protected-branch, suggest-refresh-after-pull |
 | Config | `.claude/settings.json` | Câble les hooks et permissions partagées |
+| MCP Atlassian | `.mcp.json` (gitignored) | Configuration Jira + Confluence par utilisateur, générée par `/bet-onboarding` Phase 3.1 |
 
 ## Mise à jour du package installé
 

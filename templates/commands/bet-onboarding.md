@@ -76,18 +76,69 @@ Present the available MCPs and explain what each brings:
 ```
 Recommended MCP integrations:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- 1. Atlassian (Jira)    → Link features to tickets, track progress
- 2. GitHub              → PR management, issue tracking from Claude
- 3. Chrome DevTools     → Debug frontend, inspect DOM, network, console
- 4. Playwright          → Automated E2E testing
- 5. Figma               → Import designs and mockups as reference
+ 1. Atlassian (Jira + Confluence) → Tickets, specs, ADRs, glossaire métier
+ 2. GitHub                        → PR management, issue tracking from Claude
+ 3. Chrome DevTools               → Debug frontend, inspect DOM, network, console
+ 4. Playwright                    → Automated E2E testing
+ 5. Figma                         → Import designs and mockups as reference
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Which ones would you like to install? (e.g., "1, 2, 3" or "all" or "none")
 ```
 
-For each selected MCP, provide the installation command/instructions. Do NOT install automatically — show the commands and let the user run them.
+For each selected MCP, follow the matching subsection below.
 
-If Atlassian/Jira is selected, note in STATE.md: `Jira: enabled` so future commands know to look for tickets.
+### 3.1 — Atlassian (Jira + Confluence) — interactive setup
+
+If the user selects Atlassian, run this **interactive flow** (don't just dump commands — actually fill `.mcp.json` for them, this is a private team setup).
+
+> **About to set up the Atlassian MCP.** It exposes both Jira (tickets) and Confluence (specs, ADRs, glossaire) to Claude through a single config.
+>
+> **Heads-up before we start:** the API token will be written in clear text in `.mcp.json`. We add `.mcp.json` to `.gitignore` so it never leaves your machine. Each teammate runs `/bet-onboarding` to configure their own copy. Confirm you're OK with that. (yes / no)
+
+If the user declines, fall back to the manual instructions block (see 3.1.bis below).
+
+If the user accepts, ask **one question at a time**, wait for each answer:
+
+1. > **Atlassian domain** (the part before `.atlassian.net`) — e.g. `betarena`. Press enter to use the default `betarena.atlassian.net`.
+2. > **Your Atlassian email** — the one you log in with.
+3. > **API token** — generate one at https://id.atlassian.com/manage-profile/security/api-tokens (Create API token, give it a label like "Claude Code BetArena", copy it). Paste here:
+
+Once collected, write `.mcp.json` at the project root:
+
+```json
+{
+  "mcpServers": {
+    "atlassian": {
+      "command": "uvx",
+      "args": ["mcp-atlassian"],
+      "env": {
+        "JIRA_URL": "https://<DOMAIN>.atlassian.net",
+        "JIRA_USERNAME": "<EMAIL>",
+        "JIRA_API_TOKEN": "<TOKEN>",
+        "CONFLUENCE_URL": "https://<DOMAIN>.atlassian.net/wiki",
+        "CONFLUENCE_USERNAME": "<EMAIL>",
+        "CONFLUENCE_API_TOKEN": "<TOKEN>"
+      }
+    }
+  }
+}
+```
+
+Replace `<DOMAIN>`, `<EMAIL>`, `<TOKEN>` with the answers above. Note: `mcp-atlassian` is a Python MCP server run via `uvx` (from [astral.sh/uv](https://docs.astral.sh/uv/)) — if `uvx` is not installed on the user's machine, instruct them: `brew install uv` (macOS) or follow [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
+
+Then:
+- Add `.mcp.json` to `.gitignore` (only if not already there) — under a comment "# MCP secrets — per-user setup".
+- Set `Jira: enabled` in `.planning/STATE.md` so `/bet-new-feature` and `/bet-progress` know they can call Jira.
+- Tell the user:
+  > "✓ `.mcp.json` créé et gitignored. **Restart Claude Code maintenant** pour activer le serveur Atlassian. Au redémarrage, Claude Code te demandera d'approuver le serveur — accepte. Tu pourras ensuite appeler Jira et Confluence depuis n'importe quelle commande."
+
+### 3.1.bis — Atlassian manual fallback
+
+If the user declined the interactive setup or wants to do it later, show the snippet above with placeholders and the 3 install steps (token, paste in `.mcp.json`, restart) — exactly like before.
+
+### 3.2 — Other MCPs
+
+For GitHub / Chrome DevTools / Playwright / Figma, **do NOT install automatically** — show the official install commands/instructions and let the user run them. Each has its own auth flow that's better handled by the user directly.
 
 ## Phase 4 — Hooks (verify, don't duplicate)
 

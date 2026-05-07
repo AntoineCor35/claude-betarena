@@ -305,15 +305,22 @@ An example mobile CLAUDE.md is provided in `templates/examples/mobile-CLAUDE.md`
 
 ---
 
-## Jira Integration
+## Atlassian (Jira + Confluence)
 
-If the Atlassian MCP is installed during onboarding:
+`/bet-onboarding` Phase 3.1 sets up the Atlassian MCP **interactively** — domain, email, API token in 3 questions. It writes `.mcp.json` (gitignored, per-user) and adds `.mcp.json` to `.gitignore` automatically. Restart Claude Code to activate the server.
 
-- `/bet-new-feature` automatically searches for matching Jira tickets
-- You can reference a ticket ID directly: `/bet-new-feature PROJ-123`
-- Or describe the feature and let the agent find the matching ticket
-- If no ticket exists, it proposes creating one
-- The ticket ID is tracked throughout the feature lifecycle and linked in the PR
+Once configured, you get:
+
+| What | Trigger |
+|------|---------|
+| **Jira ticket fetch** | `/bet-new-feature BA-123` pulls the ticket title, description, acceptance criteria, status |
+| **Confluence spec auto-load** | If the Jira ticket has a linked Confluence page, `/bet-new-feature` summarizes it into `.planning/<feature>/SPEC-RECAP.md` |
+| **Métier glossary lookup** | Skill `betarena-confluence` auto-loads the team glossary when domain terms (bet, stake, odds, parlay, etc.) need clarification |
+| **ADR proposals** | `/bet-discuss-phase` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
+
+The Atlassian MCP server uses [`mcp-atlassian`](https://github.com/sooperset/mcp-atlassian) via `uvx` — install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) first (`brew install uv` on macOS).
+
+> Heads-up: the API token is stored in clear text in `.mcp.json`. The file is gitignored so it never leaves your machine. For an 8-person student team this is fine ; for a larger team consider switching to env-var expansion (`${ATLASSIAN_API_TOKEN}`) and shipping `.mcp.json` tracked.
 
 ---
 

@@ -41,18 +41,49 @@ Read (if they exist):
 
 If `.planning/codebase/` doesn't exist, warn: "Run `/bet-onboarding` first for a better experience."
 
-## Step 2 — Jira integration (if enabled)
+## Step 2 — Atlassian (Jira + Confluence) integration
 
-Check STATE.md for `Jira: enabled`.
+Check STATE.md for `Jira: enabled`. If not enabled, skip the entire step.
 
-If enabled:
-- Ask: "Are you working on a Jira ticket? If yes, give me the ticket ID. Otherwise, describe what you want to build and I'll look for a matching ticket."
-- If the user gives a ticket ID → fetch ticket details via Atlassian MCP, use title + description as feature context.
-- If the user describes the feature → search Jira for matching tickets. If found, propose: "This looks like ticket <ID> — <title>. Use this? (yes / no)"
+### 2.a — Identify the Jira ticket
+
+- Ask: "Are you working on a Jira ticket? If yes, give me the ticket ID (e.g. `BA-123`). Otherwise, describe what you want to build and I'll look for a matching ticket."
+- If the user gives a ticket ID → fetch ticket details via the Atlassian MCP. Capture title, description, acceptance criteria, status, linked Confluence pages.
+- If the user describes the feature → search Jira for matching tickets. If found, propose: "This looks like ticket `<ID>` — `<title>`. Use this? (yes / no)"
 - If no match → propose: "Want me to create a Jira ticket for this? (yes / no)"
-- Save the ticket reference in the feature tracking.
+- Save the ticket reference in `.planning/<feature>/TRACKING.md` and `.planning/<feature>/JIRA.md` (cache for later commands).
 
-If Jira not enabled, skip this step.
+### 2.b — Try to fetch the linked Confluence spec (best-effort)
+
+If the Jira ticket has any linked Confluence pages (smart links in the ticket body, "linked pages" sidebar, or via the Atlassian smartlink API):
+
+1. **Best-effort fetch** — load the linked pages. If multiple, ask the user which is the spec.
+2. **Summarize** the spec in 5-10 bullets. Save as `.planning/<feature>/SPEC-RECAP.md` :
+
+```markdown
+# Spec recap — <feature>
+
+Source: <Confluence URL>
+Fetched: <today>
+
+## Goal
+<1-2 sentences>
+
+## Acceptance criteria
+- ...
+
+## Technical constraints
+- ...
+
+## Open questions
+- ...
+```
+
+3. Use the spec recap **alongside** the codebase exploration in the next steps. Don't paste the full spec into the conversation — the recap is enough.
+
+If the Atlassian MCP is **not** available (no `mcp__atlassian__*` tools exposed), skip silently and note in the planning that the spec was not auto-fetched. Don't fail Step 2.
+
+If no linked page is found, ask the user: "Le ticket n'a pas de spec Confluence liée. Tu veux qu'on en cherche une par titre, ou on continue sans ?" — and act accordingly.
 
 ## Step 3 — Explore the codebase
 
