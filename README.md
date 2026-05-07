@@ -305,15 +305,29 @@ An example mobile CLAUDE.md is provided in `templates/examples/mobile-CLAUDE.md`
 
 ---
 
-## Jira Integration
+## Atlassian (Jira + Confluence)
 
-If the Atlassian MCP is installed during onboarding:
+`/bet-onboarding` Phase 3.1 walks you through a **guided pedagogical setup** :
 
-- `/bet-new-feature` automatically searches for matching Jira tickets
-- You can reference a ticket ID directly: `/bet-new-feature PROJ-123`
-- Or describe the feature and let the agent find the matching ticket
-- If no ticket exists, it proposes creating one
-- The ticket ID is tracked throughout the feature lifecycle and linked in the PR
+1. Asks for your Atlassian domain (default `betarena`)
+2. Writes `.mcp.json` at the project root — **committed in the team repo** (no secrets, just `${ATLASSIAN_EMAIL}` and `${ATLASSIAN_API_TOKEN}` references)
+3. Walks you to the Atlassian token generation page, with a clear copy-paste flow
+4. Detects your shell (`zsh`/`bash`/`fish`) and tells you exactly which file to edit (`~/.zshrc`, `~/.bashrc`, etc.) and the 2 lines to add
+5. Verifies `uvx` is installed (instructs `brew install uv` if not)
+6. Asks you to restart Claude Code so the MCP server picks up your env vars
+
+**Sharing pattern** : the `.mcp.json` is committed (so the team owns the server config jointly), but each developer's credentials live only in their shell environment. Nobody sees anyone else's token.
+
+Once configured, you get:
+
+| What | Trigger |
+|------|---------|
+| **Jira ticket fetch** | `/bet-new-feature BA-123` pulls the ticket title, description, acceptance criteria, status |
+| **Confluence spec auto-load** | If the Jira ticket has a linked Confluence page, `/bet-new-feature` summarizes it into `.planning/<feature>/SPEC-RECAP.md` |
+| **Métier glossary lookup** | Skill `betarena-confluence` auto-loads the team glossary when domain terms (bet, stake, odds, parlay, etc.) need clarification |
+| **ADR proposals** | `/bet-discuss-phase` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
+
+The Atlassian MCP server uses [`mcp-atlassian`](https://github.com/sooperset/mcp-atlassian) via `uvx` — install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) first (`brew install uv` on macOS).
 
 ---
 
