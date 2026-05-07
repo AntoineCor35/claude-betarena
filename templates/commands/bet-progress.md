@@ -44,15 +44,27 @@ Then continue with the full briefing for the **active** feature only.
 5. Read `.planning/<feature>/PLAN.md` — the plan.
 6. Read all existing `phase-<NN>/SUMMARY.md` files — completed phase summaries.
 7. Read the current phase's `CONTEXT.md` if it exists.
-8. Run `git branch --show-current`.
-9. Run `git log --oneline -5` — recent commits.
-10. Run `git status` — uncommitted changes.
+8. **Read `.planning/<feature>/HANDOFF.md` if it exists** — written by `/bet-pause`. This holds the user's subjective state at the moment they stopped (current file, next micro-step, blockers, mental notes). It supersedes any inferred state from artifacts.
+9. Run `git branch --show-current`.
+10. Run `git log --oneline -5` — recent commits.
+11. Run `git status` — uncommitted changes.
 
-Build and display a **full contextual briefing**:
+Build and display a **full contextual briefing**. If `HANDOFF.md` was found, surface it as the **first section** so the user lands directly back in their head-space :
 
 ```
 Session Resumption — Feature: "<name>"
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+(only if HANDOFF.md exists:)
+## Dernier handoff — <timestamp from HANDOFF.md>
+> Tu t'arrêtais sur : <Q1 from HANDOFF>
+> Prochaine micro-étape prévue : <Q2 from HANDOFF>
+> Blockers : <Q3 from HANDOFF>
+> Notes : <Q4 from HANDOFF>
+>
+> (Le fichier complet : .planning/<feature>/HANDOFF.md — il est conservé tel quel jusqu'au prochain /bet-pause.)
+
+(then the standard briefing:)
 
 Branch  : <current branch>
 Jira    : <ticket or "none">
@@ -94,6 +106,7 @@ Status: <not started | in progress | blocked>
   /bet-execute <N>           Implement current phase
   /bet-commit                Commit pending changes
   /bet-next                  Move to next phase
+  /bet-pause                 Save a handoff before stopping (re-read at next /bet-progress)
 
   Add "prof" to any command for explanations.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

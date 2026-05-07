@@ -87,7 +87,7 @@ Create `.planning/<feature-slug>/PLAN.md`:
 
 Date: <today>
 Jira: <ticket ID or "none">
-Branch: feature/<feature-slug>
+Branch: feature/<branch-name>
 
 ## Summary
 <2-3 sentences describing what this feature does>
@@ -131,7 +131,7 @@ Create `.planning/<feature-slug>/TRACKING.md`:
 # Tracking: <Feature Name>
 
 Feature: <name>
-Branch: feature/<feature-slug>
+Branch: feature/<branch-name>
 Started: <today>
 Jira: <ticket ID or "none">
 Total phases: <N>
@@ -159,8 +159,14 @@ _None yet._
 
 ## Step 7 — Create branch
 
+Compute `<branch-name>`:
+- If a Jira ticket exists → `BA-<ticket-number>-<kebab-slug>` (e.g. `BA-123-add-bet-placement`)
+- If no Jira ticket → `<kebab-slug>` only (e.g. `add-bet-placement`)
+- `<kebab-slug>`: lowercase, hyphens, no spaces, no accents, max ~5 words
+
+Then:
 - Check for uncommitted changes (warn if any).
-- Create branch: `git checkout develop && git pull origin develop && git checkout -b feature/<feature-slug>`
+- Create branch: `git checkout develop && git pull origin develop && git checkout -b feature/<branch-name>`
 - If branch already exists, ask before switching.
 
 ## Step 8 — Update STATE.md
@@ -183,7 +189,7 @@ If other features already exist in `## Features`, keep them — just change the 
 ```
 Feature "<name>" is ready! (Phase 0/<total>)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Branch: feature/<feature-slug>
+Branch: feature/<branch-name>
 
 Available commands:
   /bet-discuss-phase 1       Discuss phase 1 to refine context (optional)

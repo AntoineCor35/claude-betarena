@@ -122,19 +122,78 @@ Recommendation: /bet-commit then /bet-next
 
 ## Special case: Test phase (last phase)
 
-If executing the LAST phase (tests):
+If executing the LAST phase (tests), follow a structured **test strategy Q&A** before writing any test code. This step exists to align with the **Plan Qualité §6** (test levels, coverage targets, critical business logic).
 
-1. Before writing tests, ask context-validation questions:
-   - "Based on phases 1-N, here's what I understand was built: <summary>. Is this accurate?"
-   - "Any specific edge cases or scenarios you want me to cover beyond the plan?"
+### Step 1 — Read context
 
-2. Write tests following the test plan from PLAN.md.
-3. Run the tests.
-4. If tests fail → fix the code or tests, then re-run.
-5. Show test results.
+Re-read **all** previous `phase-<NN>/SUMMARY.md` files (the only phase where you load every summary). Also read `.planning/codebase/TESTING.md` and `docs/quality-plan.md` if available.
 
-In Prof Mode for tests:
+### Step 2 — Test strategy Q&A
+
+Open with a recap, then ask in this order. **Wait for each answer before continuing.**
+
+> **Test strategy — Phase <N> (final)**
+>
+> **Recap of what was built:**
+> - Phase 1 — <title> : <summary>
+> - Phase 2 — <title> : <summary>
+> - …
+>
+> Is this accurate? (yes / corrections)
+
+Then:
+
+> **Q1 — Levels.** Per Plan Qualité §6.1:
+>   - **Unit (Jest)** — business logic in isolation. Target: 70% coverage on critical logic.
+>   - **Integration (Jest + Supertest)** — full API endpoints (if backend touched). Target: all critical endpoints.
+>   - **Manual** — for UX/parcours (last sprint, not this phase).
+>
+>   Which levels should this phase deliver? (suggest based on what was built; user confirms or adjusts)
+
+> **Q2 — Coverage focus.** From Plan Qualité §6.2 — which categories does this feature touch?
+>   - Économie virtuelle (atomic debit/credit, insufficient balance, concurrent debits, weekly salary)
+>   - Calcul de cotes (nominal, données insuffisantes, cas limites min/max)
+>   - Résolution de paris (simple win/loss, combiné partiel, combiné full win, match annulé)
+>   - Achievements (déclenchement, unicité, streaks)
+>   - Auth (signup, login, refresh token, input validation)
+>   - Other: <user describes>
+>
+>   List the relevant ones — these drive the unit test list.
+
+> **Q3 — Edge cases.** For each chosen category, surface concrete edge cases:
+>   - Examples: empty inputs, null IDs, simultaneous writes, transaction rollback, expired tokens, malformed JSON, rate limits, etc.
+>   - Add any business-specific edge cases the user wants covered.
+
+> **Q4 — Scope confirmation.** Before writing:
+>   - Files to test: <list — derived from previous phases' SUMMARY.md>
+>   - Test files to create: <list>
+>   - Estimated count: <N> unit + <M> integration
+>
+>   Sound right? (yes / adjust)
+
+### Step 3 — Write tests
+
+Follow the test plan from `PLAN.md` enriched by the Q&A answers. Place test files according to project conventions (see `.planning/codebase/TESTING.md`).
+
+### Step 4 — Run tests
+
+Run via the appropriate workspace (no top-level `task test` exists yet):
+
+```bash
+npm --workspace=src/backend test
+npm --workspace=src/shared test
+# etc.
+```
+
+If tests fail → fix the code or tests, then re-run. **Never disable a test to make CI green.**
+
+### Step 5 — Coverage check
+
+If coverage tooling is configured, run it and compare against the 70% target on business logic. Report the actual numbers in the phase SUMMARY.md.
+
+### Prof Mode for tests
+
 - Explain what each test validates and why
-- Explain the testing pattern used (unit, integration, etc.)
+- Explain the testing pattern used (unit vs integration, AAA, given-when-then, etc.)
 - Show how the test relates to the feature behavior
 - Ask "Does this coverage feel right?" at the end
