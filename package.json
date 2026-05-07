@@ -1,7 +1,7 @@
 {
   "name": "claude-betarena",
-  "version": "2.0.0",
-  "description": "A guided workflow system for Claude Code — tunnel-based feature development with context isolation, session handoff, native Professor output style, deterministic hooks, conventions skill, and quality-plan-aligned conventions.",
+  "version": "2.1.0",
+  "description": "A guided workflow system for Claude Code — tunnel-based feature development with context isolation, session handoff, native Professor output style, deterministic hooks, conventions skill, Atlassian (Jira + Confluence) integration via .env, and quality-plan-aligned conventions.",
   "keywords": [
     "claude",
     "claude-code",
