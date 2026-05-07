@@ -87,33 +87,37 @@ Which ones would you like to install? (e.g., "1, 2, 3" or "all" or "none")
 
 For each selected MCP, follow the matching subsection below.
 
-### 3.1 — Atlassian (Jira + Confluence) — guided setup
+### 3.1 — Atlassian (Jira + Confluence) — guided setup with .env
 
-If the user selects Atlassian, run this **guided didactic flow**. The pattern : `.mcp.json` is **committed in the team repo** (server config shared), but each teammate stores their **own credentials in environment variables** of their shell (never in the repo). This way :
+If the user selects Atlassian, run this **guided didactic flow**.
 
-- `.mcp.json` lives in Git → if Yannis bumps the MCP server version, everyone gets it on next pull.
-- Each developer's email + API token stay private, on their machine only.
+**Pattern :**
+- `.mcp.json` and `.claude/scripts/start-atlassian.sh` are **committed in the team repo** (no secrets, just shared config).
+- Each developer's credentials live in a local `.env` file (gitignored). The wrapper script loads `.env` before launching the MCP server.
+- The user **never has to touch their shell rc** — the agent writes everything for them.
 
-#### Step 0 — Tell the user what's about to happen
+#### Step 0 — Explain the pattern
 
 Before any prompt, explain plainly :
 
-> **Setup MCP Atlassian — pattern partagé**
+> **Setup MCP Atlassian — partagé en équipe, secrets locaux**
 >
 > Voici comment on procède :
 >
-> 1. Je vais créer un fichier `.mcp.json` à la racine du projet — il décrit comment Claude Code se connecte à Atlassian. **Ce fichier est committé** dans le repo, partagé avec ton équipe.
-> 2. Le `.mcp.json` ne contient **pas** ton token. Il référence deux variables d'environnement : `ATLASSIAN_EMAIL` et `ATLASSIAN_API_TOKEN`.
-> 3. Toi, tu vas mettre **tes** credentials dans **ton** shell (zsh/bash). Tes coéquipiers feront pareil avec **les leurs**. Personne n'a accès au token de personne.
-> 4. Au redémarrage de Claude Code, le serveur Atlassian récupère automatiquement les variables et utilise tes credentials.
+> 1. Je crée `.mcp.json` à la racine — décrit le serveur Atlassian. **Committé** dans le repo, partagé avec ton équipe.
+> 2. Je crée `.claude/scripts/start-atlassian.sh` — petit wrapper qui charge `.env` avant de lancer le serveur. **Committé** aussi.
+> 3. Je crée (ou enrichis) `.env` à la racine avec **tes** credentials Atlassian. **Gitignored** — tes secrets restent sur ta machine.
+> 4. Au redémarrage de Claude Code, le wrapper charge `.env`, le serveur démarre avec tes credentials.
+>
+> Tu n'auras **pas à toucher ton `.zshrc` / `.bashrc`**. Si ton token change un jour : édite `.env`, relance Claude Code, c'est tout.
 >
 > Prêt ? On y va. (yes / no)
 
-If the user declines, just point them to the manual fallback (3.1.bis).
+If the user declines, point them to the manual fallback (3.1.bis).
 
 #### Step 1 — Atlassian domain
 
-> **1/4 — Quel est le domaine de ton workspace Atlassian ?**
+> **1/3 — Quel est le domaine de ton workspace Atlassian ?**
 >
 > C'est la partie avant `.atlassian.net`. Pour BetArena c'est `betarena`. Tape entrée pour valider la valeur par défaut.
 >
@@ -121,7 +125,7 @@ If the user declines, just point them to the manual fallback (3.1.bis).
 
 Capture the answer (default `betarena` if empty).
 
-#### Step 2 — Write `.mcp.json` (no secrets in it)
+#### Step 2 — Write `.mcp.json` (committed, no secrets)
 
 Write this file at the project root. **Do NOT add it to `.gitignore`** — it must be committable :
 
@@ -129,22 +133,14 @@ Write this file at the project root. **Do NOT add it to `.gitignore`** — it mu
 {
   "mcpServers": {
     "atlassian": {
-      "command": "uvx",
-      "args": ["mcp-atlassian"],
-      "env": {
-        "JIRA_URL": "https://<DOMAIN>.atlassian.net",
-        "JIRA_USERNAME": "${ATLASSIAN_EMAIL}",
-        "JIRA_API_TOKEN": "${ATLASSIAN_API_TOKEN}",
-        "CONFLUENCE_URL": "https://<DOMAIN>.atlassian.net/wiki",
-        "CONFLUENCE_USERNAME": "${ATLASSIAN_EMAIL}",
-        "CONFLUENCE_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
-      }
+      "command": "sh",
+      "args": [".claude/scripts/start-atlassian.sh"]
     }
   }
 }
 ```
 
-Replace `<DOMAIN>` with the user's answer. Leave `${ATLASSIAN_EMAIL}` and `${ATLASSIAN_API_TOKEN}` literal — Claude Code expands these from the OS environment at startup.
+The wrapper script (`.claude/scripts/start-atlassian.sh`) is shipped by `npx claude-betarena` and is also committed. It reads `.env` from the project root, sets the `JIRA_*` and `CONFLUENCE_*` env vars expected by `mcp-atlassian`, and execs the MCP server.
 
 Confirm to the user :
 
@@ -152,7 +148,7 @@ Confirm to the user :
 
 #### Step 3 — Generate the API token
 
-> **2/4 — Génère ton token API Atlassian**
+> **2/3 — Génère ton token API Atlassian**
 >
 > Va sur cette page :
 >
@@ -162,60 +158,65 @@ Confirm to the user :
 >
 > 1. Clique **"Create API token (legacy)"**
 > 2. Donne-lui un label parlant — par exemple `Claude Code BetArena`
-> 3. Clique **Create**, puis **Copy** — ⚠ **tu ne pourras plus le voir ensuite**, donc copie-le quelque part en attendant l'étape suivante.
+> 3. Clique **Create**, puis **Copy** — ⚠ **tu ne pourras plus le voir ensuite**, donc colle-le ici tout de suite.
 >
-> Token copié ? (yes / pas encore)
+> Quel est ton email Atlassian ? (celui que tu utilises pour te connecter à atlassian.net)
 
-Wait for "yes" before continuing. If the user struggles, walk them through it.
+Capture the email. Then :
 
-#### Step 4 — Detect shell and explain where to add the env vars
+> Et le token API que tu viens de copier ?
 
-Detect the user's shell — run `echo $SHELL` (via Bash tool) and parse :
-- `/bin/zsh` → file is `~/.zshrc`
-- `/bin/bash` → file is `~/.bashrc` (Linux/WSL) or `~/.bash_profile` (older macOS)
-- `/usr/bin/fish` → file is `~/.config/fish/config.fish` (different syntax — use `set -x` instead of `export`)
-- Anything else → ask the user
+Capture the token. **Do NOT echo it back** in subsequent messages.
 
-Then tell them, **clearly and step-by-step** :
+#### Step 4 — Update or create `.env` (the smart part)
 
-> **3/4 — Ajoute tes credentials à ton shell**
->
-> Ton shell est : **`<DETECTED_SHELL>`**
-> Le fichier à modifier est : **`<DETECTED_RC_FILE>`**
->
-> **Ouvre ce fichier** avec ton éditeur favori (VS Code : `code <FILE>`, ou directement `nano <FILE>`).
->
-> **Ajoute ces 2 lignes à la fin du fichier** (remplace les valeurs entre guillemets) :
->
-> ```bash
-> export ATLASSIAN_EMAIL="ton.email@etu.epitech.eu"
-> export ATLASSIAN_API_TOKEN="ATATT3xFfGF0..."   # le token copié à l'étape 2
-> ```
->
-> Sauvegarde le fichier.
->
-> **Recharge ton shell** (sans fermer le terminal) :
->
-> ```bash
-> source <DETECTED_RC_FILE>
-> ```
->
-> **Vérifie que les variables sont bien définies** :
->
-> ```bash
-> echo $ATLASSIAN_EMAIL
-> echo $ATLASSIAN_API_TOKEN
-> ```
->
-> Les deux commandes doivent afficher tes valeurs (et **pas** une ligne vide).
+This is where the agent **does the work for the user**.
 
-For fish shell, adapt the syntax :
-```fish
-set -x ATLASSIAN_EMAIL "ton.email@etu.epitech.eu"
-set -x ATLASSIAN_API_TOKEN "ATATT3xFfGF0..."
+Read `.env` at the project root if it exists. Three cases :
+
+**Case A — `.env` doesn't exist**
+Create it with just the Atlassian block :
+
+```
+# Atlassian (Jira + Confluence) — used by .claude/scripts/start-atlassian.sh
+ATLASSIAN_EMAIL="<email>"
+ATLASSIAN_API_TOKEN="<token>"
+JIRA_URL="https://<domain>.atlassian.net"
+CONFLUENCE_URL="https://<domain>.atlassian.net/wiki"
 ```
 
-Wait for the user to confirm : "fait" / "ok" / equivalent.
+**Case B — `.env` exists, no Atlassian vars in it**
+**Append** the Atlassian block at the end (preserve everything that was there — Postgres, API ports, GROK_KEY, whatever) :
+
+```
+# ... existing content stays untouched ...
+
+# Atlassian (Jira + Confluence) — used by .claude/scripts/start-atlassian.sh
+ATLASSIAN_EMAIL="<email>"
+ATLASSIAN_API_TOKEN="<token>"
+JIRA_URL="https://<domain>.atlassian.net"
+CONFLUENCE_URL="https://<domain>.atlassian.net/wiki"
+```
+
+**Case C — `.env` already has `ATLASSIAN_*` keys**
+Ask the user before overwriting :
+
+> ⚠ Ton `.env` contient déjà des variables Atlassian. Tu veux les écraser avec les nouvelles valeurs ? (yes / no)
+
+If yes, replace the values for `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_URL`, `CONFLUENCE_URL` only — leave everything else untouched. If no, skip and tell them they can edit `.env` manually.
+
+**Then add `.env` to `.gitignore`** (only if not already there). Use a clear comment block :
+
+```
+# Local secrets — never committed
+.env
+```
+
+If `.env` is already in `.gitignore` (BetArena monorepo template usually has it), don't duplicate.
+
+Confirm to the user :
+
+> ✓ `.env` mis à jour avec tes credentials Atlassian (et déjà gitignored).
 
 #### Step 5 — Install `uv` if needed
 
@@ -225,15 +226,10 @@ Wait for the user to confirm : "fait" / "ok" / equivalent.
 - If not found, instruct the user :
   > **`uvx` n'est pas installé.** C'est l'outil qui exécute le serveur MCP Atlassian.
   >
-  > **macOS** :
-  > ```bash
-  > brew install uv
-  > ```
-  > **Linux/WSL** :
-  > ```bash
-  > curl -LsSf https://astral.sh/uv/install.sh | sh
-  > ```
-  > Voir [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/) pour les autres systèmes.
+  > **macOS** : `brew install uv`
+  > **Linux/WSL** : `curl -LsSf https://astral.sh/uv/install.sh | sh`
+  >
+  > Voir [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
   >
   > Une fois installé, vérifie avec : `uvx --version`
 
@@ -241,7 +237,7 @@ Wait for the user to confirm.
 
 #### Step 6 — Restart Claude Code
 
-> **4/4 — Redémarre Claude Code**
+> **3/3 — Redémarre Claude Code**
 >
 > Les serveurs MCP sont chargés au lancement de Claude Code, donc il faut le relancer pour que le serveur Atlassian démarre.
 >
@@ -254,7 +250,8 @@ Wait for the user to confirm.
 #### Final actions
 
 - Set `Jira: enabled` in `.planning/STATE.md` so future commands know they can call Jira/Confluence.
-- Do **NOT** add `.mcp.json` to `.gitignore` — it should be committed by the user with their next commit.
+- Do **NOT** add `.mcp.json` or `.claude/scripts/start-atlassian.sh` to `.gitignore` — both are committable.
+- Verify `.env` **is** in `.gitignore`.
 
 ### 3.1.bis — Atlassian manual fallback
 
@@ -262,21 +259,22 @@ If the user declined the guided setup, show this short version :
 
 > **Setup manuel** (pas guidé) :
 >
-> 1. Crée `.mcp.json` à la racine avec ce contenu (remplace `<DOMAIN>`) :
+> 1. Crée `.mcp.json` à la racine :
 >    ```json
->    { "mcpServers": { "atlassian": { "command": "uvx", "args": ["mcp-atlassian"],
->      "env": {
->        "JIRA_URL": "https://<DOMAIN>.atlassian.net",
->        "JIRA_USERNAME": "${ATLASSIAN_EMAIL}",
->        "JIRA_API_TOKEN": "${ATLASSIAN_API_TOKEN}",
->        "CONFLUENCE_URL": "https://<DOMAIN>.atlassian.net/wiki",
->        "CONFLUENCE_USERNAME": "${ATLASSIAN_EMAIL}",
->        "CONFLUENCE_API_TOKEN": "${ATLASSIAN_API_TOKEN}"
->      } } } }
+>    { "mcpServers": { "atlassian": { "command": "sh", "args": [".claude/scripts/start-atlassian.sh"] } } }
 >    ```
+>    (Le wrapper `start-atlassian.sh` est déjà installé par `npx claude-betarena` dans `.claude/scripts/`.)
 > 2. Génère un token : https://id.atlassian.com/manage-profile/security/api-tokens
-> 3. Ajoute à ton shell rc : `export ATLASSIAN_EMAIL=...` + `export ATLASSIAN_API_TOKEN=...`
-> 4. `source` ton shell rc
+> 3. Crée (ou enrichis) `.env` à la racine avec :
+>    ```
+>    ATLASSIAN_EMAIL="ton.email@..."
+>    ATLASSIAN_API_TOKEN="ATATT3..."
+>    JIRA_URL="https://<DOMAIN>.atlassian.net"
+>    CONFLUENCE_URL="https://<DOMAIN>.atlassian.net/wiki"
+>    ```
+> 4. Vérifie que `.env` est bien dans `.gitignore`.
+> 5. Vérifie que `uvx` est installé (`brew install uv` sinon).
+> 6. Restart Claude Code et accepte le serveur.
 > 5. Installe `uv` si besoin : `brew install uv`
 > 6. Restart Claude Code et accepte le serveur
 

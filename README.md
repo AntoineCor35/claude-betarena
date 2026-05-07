@@ -307,16 +307,19 @@ An example mobile CLAUDE.md is provided in `templates/examples/mobile-CLAUDE.md`
 
 ## Atlassian (Jira + Confluence)
 
-`/bet-onboarding` Phase 3.1 walks you through a **guided pedagogical setup** :
+`/bet-onboarding` Phase 3.1 walks you through a **guided setup** that doesn't require you to touch your shell rc :
 
 1. Asks for your Atlassian domain (default `betarena`)
-2. Writes `.mcp.json` at the project root — **committed in the team repo** (no secrets, just `${ATLASSIAN_EMAIL}` and `${ATLASSIAN_API_TOKEN}` references)
-3. Walks you to the Atlassian token generation page, with a clear copy-paste flow
-4. Detects your shell (`zsh`/`bash`/`fish`) and tells you exactly which file to edit (`~/.zshrc`, `~/.bashrc`, etc.) and the 2 lines to add
-5. Verifies `uvx` is installed (instructs `brew install uv` if not)
-6. Asks you to restart Claude Code so the MCP server picks up your env vars
+2. Writes `.mcp.json` at the project root — **committed in the team repo** — pointing to a wrapper script
+3. Walks you to the Atlassian token generation page
+4. Asks for your email + the token, then **writes them into `.env` for you** (creating `.env` if needed, or **appending** to your existing `.env` without disturbing other variables)
+5. Adds `.env` to `.gitignore`
+6. Verifies `uvx` is installed (`brew install uv` if not)
+7. Asks you to restart Claude Code so the MCP server picks up your credentials
 
-**Sharing pattern** : the `.mcp.json` is committed (so the team owns the server config jointly), but each developer's credentials live only in their shell environment. Nobody sees anyone else's token.
+**Sharing pattern** : `.mcp.json` and `.claude/scripts/start-atlassian.sh` are committed (the team owns the server config jointly). The credentials live in your local `.env` (gitignored, per-user). Nobody else ever sees your token.
+
+If your token rotates : just edit `.env`, save, restart Claude Code. Done. No shell rc surgery.
 
 Once configured, you get:
 

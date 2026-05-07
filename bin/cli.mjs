@@ -119,6 +119,7 @@ function* iterFlatAssets() {
     { src: 'agents',        dest: '.claude/agents',        filter: (f) => f.endsWith('.md') },
     { src: 'output-styles', dest: '.claude/output-styles', filter: (f) => f.endsWith('.md') },
     { src: 'hooks',         dest: '.claude/hooks',         filter: (f) => f.endsWith('.sh') || f.endsWith('.mjs') },
+    { src: 'scripts',       dest: '.claude/scripts',       filter: (f) => f.endsWith('.sh') || f.endsWith('.mjs') },
   ];
   for (const b of buckets) {
     const srcDir = join(TEMPLATES, b.src);
@@ -179,7 +180,7 @@ async function runInit(force) {
       skipped++;
     } else {
       copyFileSync(srcFile, dest);
-      if (bucket === 'hooks') makeExecutable(dest);
+      if (bucket === 'hooks' || bucket === 'scripts') makeExecutable(dest);
       success(`${destFile}`);
       installed++;
     }
@@ -322,7 +323,7 @@ async function runUpdate() {
   const apply = (c) => {
     ensureDir(dirname(c.dest));
     copyFileSync(c.srcFile, c.dest);
-    if (c.bucket === 'hooks') makeExecutable(c.dest);
+    if (c.bucket === 'hooks' || c.bucket === 'scripts') makeExecutable(c.dest);
   };
 
   if (choice === 'a' || choice === 'all') {

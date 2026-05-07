@@ -200,12 +200,13 @@ Invocables via `/bet-review` (review code) ou `/bet-review security` (audit séc
 
 ## Atlassian (Jira + Confluence)
 
-Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` Phase 3.1 — flow guidé pédagogique : explication du pattern, génération du token, ajout des variables d'environnement à ton shell rc, redémarrage de Claude Code.
+Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` Phase 3.1 — flow guidé pédagogique. **Aucune modification du shell rc n'est nécessaire** : l'agent écrit lui-même les credentials dans un fichier `.env` local (gitignored).
 
 **Pattern de partage** :
-- `.mcp.json` est **committé en équipe** (config serveur partagée — ne contient aucun secret, juste des références `${ATLASSIAN_EMAIL}` et `${ATLASSIAN_API_TOKEN}`).
-- Chaque dev met **ses propres credentials** dans son shell rc (`~/.zshrc`, `~/.bashrc`, etc.). Personne n'a accès au token de personne.
-- Au démarrage, Claude Code expand les `${VAR}` du `.mcp.json` à partir des env vars du shell.
+- `.mcp.json` (committé) référence un wrapper shell `.claude/scripts/start-atlassian.sh` (committé aussi).
+- Le wrapper charge `.env` à la racine et lance `uvx mcp-atlassian` avec les bonnes variables.
+- `.env` (gitignored) contient `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_URL`, `CONFLUENCE_URL` — **par utilisateur**.
+- L'agent **ajoute** au `.env` existant (préserve `POSTGRES_*`, `API_PORT`, etc.) et propose d'écraser uniquement si des vars Atlassian existent déjà.
 
 Une fois actif :
 - `/bet-new-feature BA-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
@@ -252,7 +253,8 @@ Le package `claude-betarena` installe, en plus des commandes :
 | Subagents | `.claude/agents/{reviewer,tester,security}.md` | Review code / écriture tests / audit sécurité en contexte frais |
 | Hooks | `.claude/hooks/*` | Garde-fous système : branch-guard, post-edit-lint, session-start, block-protected-branch, suggest-refresh-after-pull |
 | Config | `.claude/settings.json` | Câble les hooks et permissions partagées |
-| MCP Atlassian | `.mcp.json` (**committé** en équipe) | Configuration Jira + Confluence partagée. Référence `${ATLASSIAN_EMAIL}` et `${ATLASSIAN_API_TOKEN}` que chaque dev définit dans son shell rc. Généré par `/bet-onboarding` Phase 3.1 |
+| MCP Atlassian config | `.mcp.json` (**committé**) + `.claude/scripts/start-atlassian.sh` (**committé**) | Wrapper shell qui charge `.env` et lance `uvx mcp-atlassian`. Généré par `/bet-onboarding` Phase 3.1 |
+| MCP Atlassian secrets | `.env` (**gitignored**) | Per-user : `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_URL`, `CONFLUENCE_URL`. L'agent l'ajoute proprement (sans écraser les autres variables existantes) |
 
 ## Mise à jour du package installé
 
