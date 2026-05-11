@@ -47,7 +47,7 @@ Check STATE.md for `Jira: enabled`. If not enabled, skip the entire step.
 
 ### 2.a — Identify the Jira ticket
 
-- Ask: "Are you working on a Jira ticket? If yes, give me the ticket ID (e.g. `BA-123`). Otherwise, describe what you want to build and I'll look for a matching ticket."
+- Ask: "Are you working on a Jira ticket? If yes, give me the ticket ID (e.g. `BET-123`). Otherwise, describe what you want to build and I'll look for a matching ticket."
 - If the user gives a ticket ID → fetch ticket details via the Atlassian MCP. Capture title, description, acceptance criteria, status, linked Confluence pages.
 - If the user describes the feature → search Jira for matching tickets. If found, propose: "This looks like ticket `<ID>` — `<title>`. Use this? (yes / no)"
 - If no match → propose: "Want me to create a Jira ticket for this? (yes / no)"
@@ -191,7 +191,7 @@ _None yet._
 ## Step 7 — Create branch
 
 Compute `<branch-name>`:
-- If a Jira ticket exists → `BA-<ticket-number>-<kebab-slug>` (e.g. `BA-123-add-bet-placement`)
+- If a Jira ticket exists → `BET-<ticket-number>-<kebab-slug>` (e.g. `BET-123-add-bet-placement`)
 - If no Jira ticket → `<kebab-slug>` only (e.g. `add-bet-placement`)
 - `<kebab-slug>`: lowercase, hyphens, no spaces, no accents, max ~5 words
 

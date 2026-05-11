@@ -110,7 +110,7 @@ DoD audit — Feature "<name>"
 [ ] Integration tests cover touched endpoints (if backend)
 [ ] Acceptance criteria from PRD/Jira ticket are met
 [ ] Feature is testable on simulator/device (if mobile/frontend)
-[ ] Jira ticket BA-XXX ready to move to "Done"
+[ ] Jira ticket BET-XXX ready to move to "Done"
 
 Status: <PASS | <list of fails>>
 ```

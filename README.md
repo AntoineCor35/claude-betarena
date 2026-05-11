@@ -325,7 +325,7 @@ Once configured, you get:
 
 | What | Trigger |
 |------|---------|
-| **Jira ticket fetch** | `/bet-new-feature BA-123` pulls the ticket title, description, acceptance criteria, status |
+| **Jira ticket fetch** | `/bet-new-feature BET-123` pulls the ticket title, description, acceptance criteria, status |
 | **Confluence spec auto-load** | If the Jira ticket has a linked Confluence page, `/bet-new-feature` summarizes it into `.planning/<feature>/SPEC-RECAP.md` |
 | **Métier glossary lookup** | Skill `betarena-confluence` auto-loads the team glossary when domain terms (bet, stake, odds, parlay, etc.) need clarification |
 | **ADR proposals** | `/bet-discuss-phase` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
@@ -345,16 +345,16 @@ fix(mobile): resolve wallet balance refresh bug
 test(shared): add unit tests for odds calculator
 ```
 
-**PRs:** `[<SCOPE>] BA-XXX <Description>` — squash merge, CI verte requise, 1 approbation min
+**PRs:** `[<SCOPE>] BET-XXX <Description>` — squash merge, CI verte requise, 1 approbation min
 ```
-[BACKEND] BA-123 Add bet placement endpoint
-[MOBILE] BA-456 Fix wallet balance refresh
+[BACKEND] BET-123 Add bet placement endpoint
+[MOBILE] BET-456 Fix wallet balance refresh
 ```
 
 **Branches:**
 ```
-feature/BA-123-add-bet-placement     → merges to develop
-fix/BA-789-wallet-balance-error      → merges to develop
+feature/BET-123-add-bet-placement     → merges to develop
+fix/BET-789-wallet-balance-error      → merges to develop
 develop                              → merges to main (release)
 ```
 

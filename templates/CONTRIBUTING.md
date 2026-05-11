@@ -31,21 +31,21 @@ main ─────────────────────────
   │
   └── develop ──────────────────── Branche d'intégration
         │
-        ├── feature/BA-123-bet-placement   ← Nouvelle feature
-        └── fix/BA-456-wallet-balance      ← Correction de bug
+        ├── feature/BET-123-bet-placement   ← Nouvelle feature
+        └── fix/BET-456-wallet-balance      ← Correction de bug
 ```
 
 | Branche | Source | Cible (via PR) | Protection |
 |---------|--------|----------------|-----------|
 | `main` | — | — | PR depuis `develop`, CI verte, review approuvée |
 | `develop` | `main` | `main` | PR obligatoire, CI verte |
-| `feature/BA-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
-| `fix/BA-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
+| `feature/BET-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
+| `fix/BET-XXX-<kebab-name>` | `develop` | `develop` | PR obligatoire |
 
 **Nommage** : `<type>/BA-<ticket>-<kebab-name>`
-- `BA-XXX` = ID du ticket Jira (obligatoire si un ticket existe)
+- `BET-XXX` = ID du ticket Jira (obligatoire si un ticket existe)
 - `<kebab-name>` : minuscules, tirets, pas d'espaces, pas d'accents
-- Exemples : `feature/BA-123-add-bet-placement`, `fix/BA-789-resolve-wallet-bug`
+- Exemples : `feature/BET-123-add-bet-placement`, `fix/BET-789-resolve-wallet-bug`
 
 ---
 
@@ -87,7 +87,7 @@ Format : `<type>(<scope>): <description>`
 
 - Description en **anglais**, présent, impératif, minuscule, sans point final
 - Lignes du body < 80 caractères
-- Footer optionnel (`BREAKING CHANGE:`, `Refs: BA-XXX`, etc.)
+- Footer optionnel (`BREAKING CHANGE:`, `Refs: BET-XXX`, etc.)
 
 ### Exemples
 
@@ -106,14 +106,14 @@ Toute fusion vers `develop` ou `main` passe par une PR.
 
 ### Titre
 
-Format : `[<SCOPE>] BA-XXX <Description>`
+Format : `[<SCOPE>] BET-XXX <Description>`
 
 - **Scope uppercase** : `MOBILE`, `BACKEND`, `SHARED`, `LANDING`, `CI`, `DOCS`
-- **BA-XXX** : ticket Jira (omettre si pas de ticket associé)
+- **BET-XXX** : ticket Jira (omettre si pas de ticket associé)
 
 Exemples :
-- `[BACKEND] BA-123 Add bet placement endpoint`
-- `[MOBILE] BA-456 Fix wallet balance refresh`
+- `[BACKEND] BET-123 Add bet placement endpoint`
+- `[MOBILE] BET-456 Fix wallet balance refresh`
 - `[CI] Update Node version to 20`
 
 ### Description
@@ -125,7 +125,7 @@ La description **doit** contenir :
 <1-2 sentences>
 
 ## Jira
-BA-XXX (or "N/A")
+BET-XXX (or "N/A")
 
 ## How to test
 1. <step>
@@ -268,7 +268,7 @@ Les merges de **mise à jour** ne nécessitent **pas** de PR :
 
 | Direction | PR ? |
 |-----------|------|
-| `develop` → `feature/BA-XXX-...` (sync de branche locale) | ❌ non requise |
+| `develop` → `feature/BET-XXX-...` (sync de branche locale) | ❌ non requise |
 | `main` → `develop` (sync) | ❌ non requise |
 | `feature/*` → `develop` | ✅ obligatoire |
 | `fix/*` → `develop` | ✅ obligatoire |

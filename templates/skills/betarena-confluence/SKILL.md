@@ -1,6 +1,6 @@
 ---
 name: betarena-confluence
-description: BetArena Atlassian (Jira + Confluence) integration helpers — load when working on a Jira ticket, looking for a feature spec, an ADR (Architecture Decision Record), the métier glossary, or any team documentation that lives on Confluence. Use proactively when the user references a ticket ID like BA-XXX, asks about "the spec", "what does <business term> mean", "the glossary", or when /bet-new-feature / /bet-discuss-phase / /bet-plan-phase need richer context than the codebase offers.
+description: BetArena Atlassian (Jira + Confluence) integration helpers — load when working on a Jira ticket, looking for a feature spec, an ADR (Architecture Decision Record), the métier glossary, or any team documentation that lives on Confluence. Use proactively when the user references a ticket ID like BET-XXX, asks about "the spec", "what does <business term> mean", "the glossary", or when /bet-new-feature / /bet-discuss-phase / /bet-plan-phase need richer context than the codebase offers.
 ---
 
 # BetArena Confluence — Skill Reference
@@ -23,7 +23,7 @@ The `.mcp.json` is **committed in the team repo** but contains no secrets — it
 
 - **Domain** : `betarena.atlassian.net`
 - **Confluence root** : `https://betarena.atlassian.net/wiki`
-- **Jira project key** : `BA` (tickets are `BA-XXX`)
+- **Jira project key** : `BET` (tickets are `BET-XXX`)
 
 The exact space keys, page hierarchy, and ADR location are *not* hard-coded here — discover them on first use, then cache findings in `.planning/codebase/CONFLUENCE.md` (created on demand) so future runs are faster.
 
@@ -33,7 +33,7 @@ The exact space keys, page hierarchy, and ADR location are *not* hard-coded here
 
 ### 1. Fetch a Jira ticket
 
-When the user references `BA-XXX`, fetch:
+When the user references `BET-XXX`, fetch:
 - Title
 - Description
 - Status
@@ -79,7 +79,7 @@ Content:
   ## Status   (Proposed | Accepted | Deprecated | Superseded)
   ## Date     <today>
   ## Related
-  - Jira: BA-XXX
+  - Jira: BET-XXX
   - Phase: <feature>/phase-NN
 ```
 

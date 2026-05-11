@@ -6,7 +6,7 @@
 
 1. **Never commit directly to `main` or `develop`.** Toute modification passe par une branche dédiée et une PR.
 2. **Never commit without user approval.** Toujours proposer le message d'abord, attendre validation explicite.
-3. **Follow the simplified Git Flow.** `feature/BA-XXX-*` et `fix/BA-XXX-*` → `develop`. `develop` → `main` (release).
+3. **Follow the simplified Git Flow.** `feature/BET-XXX-*` et `fix/BET-XXX-*` → `develop`. `develop` → `main` (release).
 4. **Always plan before coding.** Toute feature non triviale passe par le tunnel `/bet-new-feature`.
 5. **TypeScript strict + lint vert.** Aucun commit avec ESLint/Prettier en erreur. La CI doit passer avant tout merge.
 6. **Definition of Done.** Une phase n'est "done" que si elle satisfait la DoD du Plan Qualité (tests unit + intégration sur logique critique, acceptance criteria couverts, ticket Jira à jour).
@@ -20,8 +20,8 @@ Chaque feature suit un tunnel guidé. L'agent **ne saute jamais d'étape** et **
     └→ Identité, audit codebase, MCP setup
 
 /bet-new-feature <name>
-    └→ Lookup Jira (BA-XXX) → Questions → Plan → Review → Phases → Tracking → Branch
-    └→ Branche : feature/BA-XXX-<kebab-name>
+    └→ Lookup Jira (BET-XXX) → Questions → Plan → Review → Phases → Tracking → Branch
+    └→ Branche : feature/BET-XXX-<kebab-name>
     └→ Propose : /bet-discuss-phase, /bet-plan-phase, /bet-execute
 
 Per phase:
@@ -82,9 +82,9 @@ Les `SUMMARY.md` des phases précédentes assurent la continuité **sans** recha
 
 **Résumé minimal** :
 - Commits : `<type>(<scope>): <description>` — types : `feat, fix, docs, style, refactor, test, chore` — scopes : `mobile, backend, shared, landing, ci, docs`
-- PRs : `[<SCOPE>] BA-XXX <Description>` — squash merge — CI verte obligatoire — 1 approbation min — PRs vers `main` : Antoine Cormier + Maxence Guidez
+- PRs : `[<SCOPE>] BET-XXX <Description>` — squash merge — CI verte obligatoire — 1 approbation min — PRs vers `main` : Antoine Cormier + Maxence Guidez
 
-**Branches** : `feature/BA-XXX-<kebab-name>` et `fix/BA-XXX-<kebab-name>` → `develop` (toutes via PR).
+**Branches** : `feature/BET-XXX-<kebab-name>` et `fix/BET-XXX-<kebab-name>` → `develop` (toutes via PR).
 
 ## Code
 
@@ -209,7 +209,7 @@ Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` 
 - L'agent **ajoute** au `.env` existant (préserve `POSTGRES_*`, `API_PORT`, etc.) et propose d'écraser uniquement si des vars Atlassian existent déjà.
 
 Une fois actif :
-- `/bet-new-feature BA-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
+- `/bet-new-feature BET-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
 - Le skill `betarena-confluence` (`.claude/skills/betarena-confluence/SKILL.md`) s'auto-charge quand l'agent travaille sur un ticket, cherche la spec, ou résout un terme métier (consulte le glossaire Confluence)
 - `/bet-discuss-phase` et `/bet-plan-phase` peuvent proposer la création d'ADR (Architecture Decision Records) sur Confluence après accord explicite de l'utilisateur
 
@@ -238,8 +238,8 @@ Une fois actif :
 
 Si Atlassian MCP installé (`Jira: enabled` dans STATE.md) :
 - `/bet-new-feature` cherche un ticket existant ou propose d'en créer un
-- L'utilisateur peut référencer un ticket : `/bet-new-feature BA-123` ou décrire la feature pour auto-match
-- Le ticket ID alimente le nom de branche (`feature/BA-XXX-...`), le titre de PR, et le tracking
+- L'utilisateur peut référencer un ticket : `/bet-new-feature BET-123` ou décrire la feature pour auto-match
+- Le ticket ID alimente le nom de branche (`feature/BET-XXX-...`), le titre de PR, et le tracking
 
 ## Garde-fous & assets installés
 

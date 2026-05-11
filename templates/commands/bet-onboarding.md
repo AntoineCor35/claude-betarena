@@ -245,7 +245,7 @@ Wait for the user to confirm.
 > 2. Relance : `claude`
 > 3. Au démarrage, Claude Code te demandera d'**approuver le serveur Atlassian** — accepte.
 >
-> ✓ Tu auras ensuite accès à Jira et Confluence depuis n'importe quelle commande BetArena. Le ticket et la spec liée seront automatiquement chargés par `/bet-new-feature BA-XXX`.
+> ✓ Tu auras ensuite accès à Jira et Confluence depuis n'importe quelle commande BetArena. Le ticket et la spec liée seront automatiquement chargés par `/bet-new-feature BET-XXX`.
 
 #### Final actions
 
