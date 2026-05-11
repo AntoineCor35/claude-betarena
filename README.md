@@ -91,8 +91,7 @@ You enter a guided tunnel:
 ### 4. Work phase by phase
 
 ```
-/bet-discuss-phase 1          # Optional — refine context through Q&A
-/bet-plan-phase 1             # Detail the technical approach
+/bet-plan-phase 1 discuss     # Detail the technical approach (use `discuss` flag for Q&A first)
 /bet-execute 1                # Implement the code
 /bet-commit                   # Commit (respects CONTRIBUTING.md)
 /bet-next                     # Move to next phase
@@ -112,23 +111,25 @@ Repeat until all phases are done. The last phase is always **tests**.
 
 ## Commands
 
+> **Don't remember a specific command?** Just type `/bet` — it's a smart router that detects your current state and proposes the right next action.
+
 ### Setup
 
 | Command | Description |
 |---------|-------------|
-| `/bet-onboarding` | One-time project setup: identity, codebase audit, MCP integrations |
+| `/bet-onboarding` | One-time project setup: identity, codebase audit, MCP integrations (Atlassian incl.) |
 | `/bet-refresh` | Re-audit the codebase after a `git pull` or structural changes |
 
 ### Feature Lifecycle
 
 | Command | Description |
 |---------|-------------|
-| `/bet-new-feature <name>` | Start the guided feature tunnel |
-| `/bet-discuss-phase <N> [prof]` | Q&A to refine phase context *(optional)* |
-| `/bet-plan-phase <N> [prof]` | Create detailed technical plan for a phase |
+| `/bet` | **Smart router** — diagnoses state, proposes/runs the right next action |
+| `/bet-new-feature [fix] <name>` | Start the guided tunnel ; `fix` flag creates a `fix/BET-XXX-*` branch instead of `feature/BET-XXX-*` |
+| `/bet-plan-phase <N> [discuss] [prof]` | Detailed technical plan for a phase ; `discuss` flag for Q&A first |
 | `/bet-execute <N> [prof]` | Implement the phase code |
-| `/bet-next` | Advance to the next phase |
-| `/bet-pause` | Save a session handoff before stopping (HANDOFF.md) — re-read at next `/bet-progress` |
+| `/bet-next` | Advance to the next phase (DoD gate) |
+| `/bet-pause` | Save a session handoff (HANDOFF.md) — re-read at next `/bet-progress` |
 | `/bet-progress` | Resume a session with full contextual briefing |
 | `/bet-switch [slug]` | Switch between parallel features |
 
@@ -138,16 +139,12 @@ Repeat until all phases are done. The last phase is always **tests**.
 |---------|-------------|
 | `/bet-commit` | Propose a commit following conventions |
 | `/bet-pr` | Create a Pull Request |
-| `/bet-branch` | Create a GitFlow branch manually |
 | `/bet-doc` | Update project documentation |
 | `/bet-review [security]` | AI code review with fresh context (Writer/Reviewer pattern) |
 
-### Modes
+### Professor Mode
 
-| Command | Description |
-|---------|-------------|
-| `/bet-prof on/off` | Toggle Professor Mode globally |
-| `/bet-docker` | Docker management *(placeholder — coming soon)* |
+Type `/output-style betarena-professor` (native Claude Code command) to enable Professor Mode globally for the session — explanations on every non-trivial decision. Type `/output-style default` to disable. Or add `prof` as an argument to any `/bet-*` command for a one-shot pedagogical run (e.g. `/bet-execute 1 prof`).
 
 ---
 
@@ -202,8 +199,8 @@ Professor Mode turns the agent into a teaching partner. It explains the *why* be
 **Two ways to activate:**
 
 ```
-/bet-prof on                   # Global — affects all commands
-/bet-execute 1 prof            # Per-command — just for this one
+/output-style betarena-professor   # Global — affects all commands until /output-style default
+/bet-execute 1 prof                # Per-command — just for this one
 ```
 
 Ideal for:
@@ -225,7 +222,7 @@ Ideal for:
     +-- Branch creation (GitFlow)
          |
          +-- Phase 1: Code
-         |    +-- /bet-discuss-phase 1   (optional)
+         |    +-- /bet-plan-phase 1 discuss   (optional)
          |    +-- /bet-plan-phase 1      (recommended)
          |    +-- /bet-execute 1
          |    +-- /bet-commit
@@ -272,7 +269,7 @@ The key innovation borrowed from [GSD](https://github.com/gsd-build/get-shit-don
     PLAN.md                         # Feature plan with all phases
     TRACKING.md                     # Progress + context briefing
     phase-01/
-      CONTEXT.md                    # Decisions from /bet-discuss-phase
+      CONTEXT.md                    # Decisions from /bet-plan-phase (avec flag discuss)
       SUMMARY.md                    # Recap after /bet-execute
     phase-02/
       CONTEXT.md
@@ -328,7 +325,7 @@ Once configured, you get:
 | **Jira ticket fetch** | `/bet-new-feature BET-123` pulls the ticket title, description, acceptance criteria, status |
 | **Confluence spec auto-load** | If the Jira ticket has a linked Confluence page, `/bet-new-feature` summarizes it into `.planning/<feature>/SPEC-RECAP.md` |
 | **Métier glossary lookup** | Skill `betarena-confluence` auto-loads the team glossary when domain terms (bet, stake, odds, parlay, etc.) need clarification |
-| **ADR proposals** | `/bet-discuss-phase` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
+| **ADR proposals** | `/bet-plan-phase (avec flag discuss)` and `/bet-plan-phase` can propose to create Architecture Decision Records on Confluence after explicit user approval |
 
 The Atlassian MCP server uses [`mcp-atlassian`](https://github.com/sooperset/mcp-atlassian) via `uvx` — install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) first (`brew install uv` on macOS).
 
@@ -411,7 +408,7 @@ BetArena targets Claude Code v2.1.111+ with Opus 4.7. The following user-level s
 
 | Setting | Effect |
 |---------|--------|
-| `model: opusplan` | Uses Opus 4.7 in plan mode (`/bet-plan-phase`, `/bet-discuss-phase`) and switches to Sonnet 4.6 for execution (`/bet-execute`). Best reasoning where it matters, lower cost during code generation. |
+| `model: opusplan` | Uses Opus 4.7 in plan mode (`/bet-plan-phase`, `/bet-plan-phase (avec flag discuss)`) and switches to Sonnet 4.6 for execution (`/bet-execute`). Best reasoning where it matters, lower cost during code generation. |
 | `effortLevel: xhigh` | Default on Opus 4.7. Best balance of reasoning depth and token spend for agentic coding tasks. |
 | `CLAUDE_CODE_SUBAGENT_MODEL: sonnet` | Sub-agents (`reviewer`, `tester`) inherit Sonnet by default — frontmatter `model:` overrides this per-agent (e.g., `security` keeps Opus). |
 

@@ -1,6 +1,6 @@
 ---
 name: betarena-confluence
-description: BetArena Atlassian (Jira + Confluence) integration helpers — load when working on a Jira ticket, looking for a feature spec, an ADR (Architecture Decision Record), the métier glossary, or any team documentation that lives on Confluence. Use proactively when the user references a ticket ID like BET-XXX, asks about "the spec", "what does <business term> mean", "the glossary", or when /bet-new-feature / /bet-discuss-phase / /bet-plan-phase need richer context than the codebase offers.
+description: BetArena Atlassian (Jira + Confluence) integration helpers — load when working on a Jira ticket, looking for a feature spec, an ADR (Architecture Decision Record), the métier glossary, or any team documentation that lives on Confluence. Use proactively when the user references a ticket ID like BET-XXX, asks about "the spec", "what does <business term> mean", "the glossary", or when /bet-new-feature / /bet-plan-phase (avec flag discuss) / /bet-plan-phase need richer context than the codebase offers.
 ---
 
 # BetArena Confluence — Skill Reference
@@ -58,7 +58,7 @@ When the user (or a previous phase summary) references a domain term you're unsu
 
 ### 4. Architecture decision lookups
 
-When `/bet-discuss-phase` or `/bet-plan-phase` raises a "we already decided this" feeling, search for `ADR` or `Decision Record` in Confluence. Cite the page URL in the planning docs so traceability is preserved.
+When `/bet-plan-phase (avec flag discuss)` or `/bet-plan-phase` raises a "we already decided this" feeling, search for `ADR` or `Decision Record` in Confluence. Cite the page URL in the planning docs so traceability is preserved.
 
 ### 5. Creating an ADR (proposal)
 

@@ -16,31 +16,32 @@
 Chaque feature suit un tunnel guidé. L'agent **ne saute jamais d'étape** et **propose toujours la commande suivante**.
 
 ```
-/bet-onboarding (one-time)
-    └→ Identité, audit codebase, MCP setup
+Si tu ne sais pas quoi faire : tape /bet — le router intelligent te guide.
 
-/bet-new-feature <name>
+/bet-onboarding (one-time)
+    └→ Identité, audit codebase, MCP setup (Atlassian inclus)
+
+/bet-new-feature [fix] <name>
     └→ Lookup Jira (BET-XXX) → Questions → Plan → Review → Phases → Tracking → Branch
-    └→ Branche : feature/BET-XXX-<kebab-name>
-    └→ Propose : /bet-discuss-phase, /bet-plan-phase, /bet-execute
+    └→ Branche : feature/BET-XXX-<kebab-name> (ou fix/BET-XXX-* avec le flag fix)
+    └→ Propose : /bet-plan-phase, /bet-execute
 
 Per phase:
-    /bet-discuss-phase <N> [prof]   → Q&A pour affiner le contexte (optionnel)
-    /bet-plan-phase <N> [prof]      → Détail du plan technique (recommandé)
-    /bet-execute <N> [prof]         → Implémentation
-    /bet-commit                     → Commit (après chaque phase)
-    /bet-next                       → Avance à la phase suivante (gate DoD)
+    /bet-plan-phase <N> [discuss] [prof]  → Plan technique (avec Q&A si flag discuss)
+    /bet-execute <N> [prof]               → Implémentation
+    /bet-commit                           → Commit (après chaque phase)
+    /bet-next                             → Avance à la phase suivante (gate DoD)
 
 Last phase = tests:
-    /bet-execute <last> [prof]      → Q&A stratégie test → écrit + lance les tests
+    /bet-execute <last> [prof]            → Q&A stratégie test → écrit + lance les tests
 
 End of feature:
     /bet-commit → /bet-doc → /bet-pr (gate DoD complet)
 
 Pause / reprise / multi-feature :
-    /bet-pause                      → Capture où tu t'arrêtes (HANDOFF.md)
-    /bet-progress                   → Briefing complet + handoff précédent (s'il existe)
-    /bet-switch <slug>              → Basculer entre features actives en parallèle
+    /bet-pause                            → Capture où tu t'arrêtes (HANDOFF.md)
+    /bet-progress                         → Briefing complet + handoff précédent (s'il existe)
+    /bet-switch <slug>                    → Basculer entre features actives en parallèle
 ```
 
 ## Context Isolation
@@ -57,12 +58,14 @@ Les `SUMMARY.md` des phases précédentes assurent la continuité **sans** recha
 
 ## Commands Reference
 
+> **Première commande à connaître : `/bet`** — c'est un router intelligent qui lit l'état du projet et propose la bonne prochaine action. Si tu ne te souviens pas du nom exact, tape `/bet` et il te guidera. Tu peux aussi taper `/bet <verb>` (ex. `/bet commit`) pour court-circuiter le menu.
+
 | Command | Purpose |
 |---------|---------|
-| `/bet-onboarding` | Setup unique : identité, audit, MCPs |
-| `/bet-new-feature <name>` | Démarre le tunnel feature |
-| `/bet-discuss-phase <N> [prof]` | Q&A pour affiner le contexte d'une phase (optionnel) |
-| `/bet-plan-phase <N> [prof]` | Plan technique détaillé d'une phase |
+| `/bet` | **Router intelligent** : détecte l'état, propose et/ou exécute la prochaine action |
+| `/bet-onboarding` | Setup unique : identité, audit, MCPs (Atlassian inclus) |
+| `/bet-new-feature [fix] <name>` | Démarre le tunnel feature ; flag `fix` pour créer une branche `fix/BET-XXX-*` |
+| `/bet-plan-phase <N> [discuss] [prof]` | Plan technique détaillé d'une phase ; flag `discuss` pour Q&A préliminaire |
 | `/bet-execute <N> [prof]` | Implémente une phase |
 | `/bet-commit` | Propose un commit (format CONTRIBUTING.md) |
 | `/bet-next` | Avance à la phase suivante (gate DoD) |
@@ -72,9 +75,13 @@ Les `SUMMARY.md` des phases précédentes assurent la continuité **sans** recha
 | `/bet-pr` | Crée la Pull Request (gate DoD complet) |
 | `/bet-doc` | Met à jour la documentation |
 | `/bet-review [security]` | AI code review en contexte frais (subagent reviewer/security) |
-| `/bet-prof on/off` | Toggle Professor Mode global |
-| `/bet-branch` | Crée une branche Git Flow manuellement |
 | `/bet-refresh` | Re-audit codebase après pull |
+
+**Commandes retirées en v2.1.1** (toujours invocables nativement) :
+- `/bet-prof` → utilise `/output-style betarena-professor` (et `/output-style default` pour revenir)
+- `/bet-docker` → l'agent lance `task dev:*` directement quand tu demandes "lance la stack" / "logs backend"
+- `/bet-branch` → `/bet-new-feature [fix] <name>` crée la branche pour toi
+- `/bet-discuss-phase` → fusionné dans `/bet-plan-phase <N> discuss`
 
 ## Conventions de commit & PR
 
@@ -142,8 +149,10 @@ Pour les projets multi-couches, ajouter un `CLAUDE.md` dans chaque sous-dossier 
 Le mode pédagogue est implémenté comme un **output style natif** Claude Code (`.claude/output-styles/betarena-professor.md` après `npx claude-betarena`).
 
 Deux activations :
-- **Global (session)** : `/output-style betarena-professor` (ou via `/bet-prof on` qui rappelle la commande). Désactivation : `/output-style default` ou `/bet-prof off`.
+- **Global (session)** : `/output-style betarena-professor` — active le mode pédagogue pour toute la session. Désactivation : `/output-style default`.
 - **Per-command (ponctuel)** : ajouter `prof` en argument — ex. `/bet-execute 1 prof` — applique le mode pédagogue pour cette invocation uniquement, sans toucher à l'output style global.
+
+> L'ancienne commande `/bet-prof on/off` a été retirée — `/output-style` natif fait la même chose, sans wrapper.
 
 En Professor Mode, l'agent explique le *why* derrière chaque décision non triviale, cite des fichiers du codebase comme analogues, fait des pauses aux points clés, et termine les unités de travail par un mini-recap "ce qu'on a appris".
 
@@ -211,7 +220,7 @@ Le MCP `mcp-atlassian` est configuré au premier lancement de `/bet-onboarding` 
 Une fois actif :
 - `/bet-new-feature BET-XXX` fetche le ticket Jira **et** la spec Confluence liée (best-effort) → résumé dans `.planning/<feature>/SPEC-RECAP.md`
 - Le skill `betarena-confluence` (`.claude/skills/betarena-confluence/SKILL.md`) s'auto-charge quand l'agent travaille sur un ticket, cherche la spec, ou résout un terme métier (consulte le glossaire Confluence)
-- `/bet-discuss-phase` et `/bet-plan-phase` peuvent proposer la création d'ADR (Architecture Decision Records) sur Confluence après accord explicite de l'utilisateur
+- `/bet-plan-phase <N>` (avec ou sans flag `discuss`) peut proposer la création d'ADR (Architecture Decision Records) sur Confluence après accord explicite de l'utilisateur
 
 > Le serveur MCP utilise `uvx mcp-atlassian` ; installe `uv` au préalable (`brew install uv` sur macOS).
 

@@ -1,13 +1,17 @@
 ---
-description: Start a new feature — guided tunnel from questions to plan to branch
-argument-hint: "<feature description>"
+description: Start a new feature (or fix) — guided tunnel from questions to plan to branch. Accepts a `fix` flag to create a fix/BET-XXX-* branch instead of feature/BET-XXX-*.
+argument-hint: "[fix] <description>"
 allowed-tools: Read, Write, Glob, Grep, Bash(git *)
 disable-model-invocation: true
 ---
 
-Start a new feature. Enters a guided tunnel: questions → plan → review → phases → tracking.
+Start a new feature (or fix). Enters a guided tunnel: questions → plan → review → phases → tracking → branch.
 
-Usage: `/bet-new-feature <feature description>`
+Usage:
+- `/bet-new-feature <description>` — creates a `feature/BET-XXX-...` branch
+- `/bet-new-feature fix <description>` — creates a `fix/BET-XXX-...` branch (for bug correction)
+
+The `fix` keyword must be the **first word** of the arguments to be recognized. If the description starts with "fix" but it's part of the natural sentence (e.g. "fix the login button color"), the agent will ask the user to confirm whether they want a feature or fix branch.
 
 ## Guard — Check for in-progress features
 
@@ -190,14 +194,20 @@ _None yet._
 
 ## Step 7 — Create branch
 
+**Determine the branch type** from `$ARGUMENTS` :
+- If the first word is `fix` (or `--fix`) → branch type is `fix/`, and the rest of the arguments is the description
+- Otherwise → branch type is `feature/`
+- If the description **starts with a verb like "fix"** but it's part of a natural sentence (e.g. "fix the wallet refresh bug"), ask :
+  > "Le mot 'fix' est dans ta description. Tu veux que je crée une **branche `fix/`** (correction de bug) ou une **branche `feature/`** (le mot fix fait juste partie du nom) ?"
+
 Compute `<branch-name>`:
 - If a Jira ticket exists → `BET-<ticket-number>-<kebab-slug>` (e.g. `BET-123-add-bet-placement`)
 - If no Jira ticket → `<kebab-slug>` only (e.g. `add-bet-placement`)
-- `<kebab-slug>`: lowercase, hyphens, no spaces, no accents, max ~5 words
+- `<kebab-slug>`: lowercase, hyphens, no spaces, no accents, max ~5 words. Strip the `fix` keyword from the slug if it was used as a flag.
 
 Then:
 - Check for uncommitted changes (warn if any).
-- Create branch: `git checkout develop && git pull origin develop && git checkout -b feature/<branch-name>`
+- Create branch: `git checkout develop && git pull origin develop && git checkout -b <type>/<branch-name>` (where `<type>` is `feature` or `fix`).
 - If branch already exists, ask before switching.
 
 ## Step 8 — Update STATE.md
@@ -223,7 +233,7 @@ Feature "<name>" is ready! (Phase 0/<total>)
 Branch: feature/<branch-name>
 
 Available commands:
-  /bet-discuss-phase 1       Discuss phase 1 to refine context (optional)
+  /bet-plan-phase 1 discuss       Discuss phase 1 to refine context (optional)
   /bet-plan-phase 1          Detail the technical plan for phase 1 (recommended)
   /bet-execute 1             Jump straight to implementation
 
@@ -232,6 +242,6 @@ Available commands:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Assess whether `/bet-discuss-phase 1` is recommended based on context clarity:
+Assess whether `/bet-plan-phase 1 discuss` is recommended based on context clarity:
 - If the feature is complex or touches unfamiliar code → recommend discuss first
 - If the feature is straightforward and well-defined → recommend skipping to plan-phase

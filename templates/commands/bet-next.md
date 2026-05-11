@@ -60,7 +60,7 @@ Goal: <goal>
 Progress: [████░░░░░░] <N>/<total> phases complete
 
 Available commands:
-  /bet-discuss-phase <N+1>       Discuss to refine context (optional)
+  /bet-plan-phase <N+1> discuss       Discuss to refine context (optional)
   /bet-plan-phase <N+1>          Detail the technical plan (recommended)
   /bet-execute <N+1>             Jump to implementation
   /bet-progress                  Full status overview
@@ -70,7 +70,7 @@ Available commands:
 ```
 
 Recommend:
-- Next phase is complex or unfamiliar → `/bet-discuss-phase` first
+- Next phase is complex or unfamiliar → `/bet-plan-phase (avec flag discuss)` first
 - Context clear → `/bet-plan-phase` then `/bet-execute`
 - Simple, well-defined → straight to `/bet-execute`
 

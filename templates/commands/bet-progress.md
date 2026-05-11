@@ -101,7 +101,7 @@ Status: <not started | in progress | blocked>
 
 ## Available commands
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  /bet-discuss-phase <N>     Refine context for current phase
+  /bet-plan-phase <N> discuss     Refine context for current phase
   /bet-plan-phase <N>        Detail technical plan
   /bet-execute <N>           Implement current phase
   /bet-commit                Commit pending changes

@@ -327,7 +327,7 @@ _No feature in progress._
 _None yet._
 ```
 
-> Note: Professor Mode is no longer tracked here — it lives as a native Claude Code output style (`/output-style betarena-professor`). See `/bet-prof` for details.
+> Note: Professor Mode is no longer tracked here — it lives as a native Claude Code output style. Activate via `/output-style betarena-professor` (and `/output-style default` to revert).
 
 ## Phase 6 — Découverte des super-pouvoirs
 
