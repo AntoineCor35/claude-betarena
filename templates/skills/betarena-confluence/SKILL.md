@@ -1,6 +1,6 @@
 ---
 name: betarena-confluence
-description: BetArena Atlassian (Jira + Confluence) integration helpers — load when working on a Jira ticket, looking for a feature spec, an ADR (Architecture Decision Record), the métier glossary, or any team documentation that lives on Confluence. Use proactively when the user references a ticket ID like BET-XXX, asks about "the spec", "what does <business term> mean", "the glossary", or when /bet-new-feature / /bet-plan-phase (avec flag discuss) / /bet-plan-phase need richer context than the codebase offers.
+description: BetArena Atlassian (Jira + Confluence) helpers. Load on Jira ticket refs (BET-XXX), spec lookups, ADRs, métier glossary, or when /bet-new-feature / /bet-plan-phase need richer context.
 ---
 
 # BetArena Confluence — Skill Reference

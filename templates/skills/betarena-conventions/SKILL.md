@@ -1,6 +1,6 @@
 ---
 name: betarena-conventions
-description: BetArena project conventions — load when about to commit, push, open a PR, create a branch, or run lint/build/tests. Covers Conventional Commits format, branch naming with BET-XXX Jira prefix, the mandatory Task runner (never npm directly), the simplified Git Flow, and the Definition of Done checklist. Use proactively whenever the agent is about to invoke `git commit`, `git push`, `gh pr create`, or any quality gate command.
+description: BetArena conventions (commits, PRs, branches BET-XXX, Task runner, DoD). Load proactively before `git commit`, `git push`, `gh pr create`, branch creation, or any quality gate command.
 ---
 
 # BetArena — Conventions Quick Reference
