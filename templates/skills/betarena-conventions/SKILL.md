@@ -1,6 +1,6 @@
 ---
 name: betarena-conventions
-description: BetArena project conventions — load when about to commit, push, open a PR, create a branch, or run lint/build/tests. Covers Conventional Commits format, branch naming with BA-XXX Jira prefix, the mandatory Task runner (never npm directly), the simplified Git Flow, and the Definition of Done checklist. Use proactively whenever the agent is about to invoke `git commit`, `git push`, `gh pr create`, or any quality gate command.
+description: BetArena conventions (commits, PRs, branches BET-XXX, Task runner, DoD). Load proactively before `git commit`, `git push`, `gh pr create`, branch creation, or any quality gate command.
 ---
 
 # BetArena — Conventions Quick Reference
@@ -24,13 +24,13 @@ Examples:
 - `fix(mobile): resolve wallet balance refresh bug`
 - `test(shared): add unit tests for odds calculator`
 
-**Forbidden:** committing on `main` or `develop`. Always work on a `feature/BA-XXX-*` or `fix/BA-XXX-*` branch.
+**Forbidden:** committing on `main` or `develop`. Always work on a `feature/BET-XXX-*` or `fix/BET-XXX-*` branch.
 
 ---
 
 ## Pull Requests
 
-Title: `[<SCOPE>] BA-XXX <Description>` — scope uppercase: `MOBILE`, `BACKEND`, `SHARED`, `LANDING`, `CI`, `DOCS`. Omit `BA-XXX` only if no Jira ticket.
+Title: `[<SCOPE>] BET-XXX <Description>` — scope uppercase: `MOBILE`, `BACKEND`, `SHARED`, `LANDING`, `CI`, `DOCS`. Omit `BET-XXX` only if no Jira ticket.
 
 Required body sections: *What does this PR do?*, *Jira*, *How to test*, *Screenshots* (if UI), *Tests* (CI passes / new tests / existing pass), *Notes*.
 
@@ -45,12 +45,12 @@ Merge: **squash merge** only, **CI green** required, branch deleted after merge.
 ```
 main ─────────────── Production
   └── develop ─────  Integration
-        ├── feature/BA-XXX-<kebab-name>   → develop (PR)
-        └── fix/BA-XXX-<kebab-name>       → develop (PR)
+        ├── feature/BET-XXX-<kebab-name>   → develop (PR)
+        └── fix/BET-XXX-<kebab-name>       → develop (PR)
 ```
 
 - All branches (feature **and** fix) start from `develop`.
-- `BA-XXX` is the Jira ticket ID — include it whenever a ticket exists.
+- `BET-XXX` is the Jira ticket ID — include it whenever a ticket exists.
 - `<kebab-name>` is lowercase, hyphenated, no spaces, no accents.
 - Never branch from `main` directly. Releases happen via `develop` → `main` PRs.
 
@@ -96,7 +96,7 @@ A story is *Done* when:
 - [ ] CI green (lint + tests)
 - [ ] Unit tests cover nominal + error cases on critical business logic (target 70 %)
 - [ ] Integration tests cover touched endpoints (if backend)
-- [ ] Jira ticket BA-XXX moved to "Done"
+- [ ] Jira ticket BET-XXX moved to "Done"
 - [ ] Feature testable on simulator/device (if mobile/frontend)
 - [ ] Acceptance criteria from PRD/ticket are met
 

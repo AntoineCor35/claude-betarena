@@ -36,8 +36,8 @@ If any item fails:
 ## Determine PR target
 
 From the current branch name:
-- `feature/BA-XXX-*` → target `develop`
-- `fix/BA-XXX-*` → target `develop`
+- `feature/BET-XXX-*` → target `develop`
+- `fix/BET-XXX-*` → target `develop`
 - `develop` → target `main` (release PR)
 - Other → ask the user for the target.
 
@@ -45,15 +45,15 @@ From the current branch name:
 
 ### Title
 
-Format: `[<SCOPE>] BA-XXX <Description>`
+Format: `[<SCOPE>] BET-XXX <Description>`
 
 - **Scope (uppercase):** `MOBILE`, `BACKEND`, `SHARED`, `LANDING`, `CI`, `DOCS`
-- **BA-XXX:** Jira ticket from TRACKING.md. Omit only if no ticket exists.
+- **BET-XXX:** Jira ticket from TRACKING.md. Omit only if no ticket exists.
 - **Description:** short, present tense, in English.
 
 Examples:
-- `[BACKEND] BA-123 Add bet placement endpoint`
-- `[MOBILE] BA-456 Fix wallet balance refresh`
+- `[BACKEND] BET-123 Add bet placement endpoint`
+- `[MOBILE] BET-456 Fix wallet balance refresh`
 
 ### Body
 
@@ -62,7 +62,7 @@ Examples:
 <1-2 sentences from PLAN.md summary>
 
 ## Jira
-<BA-XXX link, or "N/A">
+<BET-XXX link, or "N/A">
 
 ## Changes
 <organized by phase>
@@ -133,5 +133,5 @@ Reminders:
 
 - **Never create a PR without user approval.**
 - **Never create a PR from `main` or `develop`** (except `develop` → `main` release PR) — warn the user otherwise.
-- Always follow the title format from `CONTRIBUTING.md`: `[SCOPE] BA-XXX Description`.
+- Always follow the title format from `CONTRIBUTING.md`: `[SCOPE] BET-XXX Description`.
 - Never bypass the DoD gate silently — surface failures, let the user decide.

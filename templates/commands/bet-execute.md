@@ -112,7 +112,7 @@ Phase <N>/<total> complete — <title>
 Available commands:
   /bet-commit                Commit this phase's work
   /bet-next                  Move to next phase
-  /bet-discuss-phase <N+1>   Discuss next phase (optional)
+  /bet-plan-phase <N+1> discuss   Discuss next phase (optional)
   /bet-plan-phase <N+1>      Plan next phase
   /bet-progress              See full status
 

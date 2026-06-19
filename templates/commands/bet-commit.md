@@ -64,5 +64,5 @@ Show the message to the user:
 ## Branch safety
 
 Check the current branch before committing:
-- On `main` or `develop` → **refuse** and suggest `/bet-new-feature` or `/bet-branch`.
+- On `main` or `develop` → **refuse** and suggest `/bet-new-feature [fix] <name>` to create a proper branch first.
 - On a `feature/*` or `fix/*` branch → proceed.

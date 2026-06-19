@@ -148,25 +148,62 @@ Confirm to the user :
 
 #### Step 3 — Generate the API token
 
+**This block is MANDATORY. Do not skip it.** Even if the user is in a hurry, display the full instructions below before asking for the token. The user needs to understand where to click — without this they'll be stuck.
+
 > **2/3 — Génère ton token API Atlassian**
 >
-> Va sur cette page :
+> **Étape 1 — Va sur la page de gestion des tokens** (clique sur le lien, ouvre-le dans ton navigateur) :
 >
+> 👉 https://id.atlassian.com/manage-profile/security/api-tokens
+>
+> **Étape 2 — Connecte-toi** avec ton compte Atlassian si on te le demande (le même que pour BetArena Confluence/Jira).
+>
+> **Étape 3 — Crée un nouveau token** :
+> - Cherche un bouton **"Create API token"** (le label exact peut varier selon la version d'Atlassian : `Create API token`, `Create API token (legacy)`, `Create API token (classic)`, ou `Create API token with scopes`).
+> - Clique dessus.
+> - Si l'UI demande un **label** : mets quelque chose de parlant — par exemple `Claude Code BetArena` ou `Claude Sandbox`. Aucune importance, c'est pour t'y retrouver plus tard si tu listes tes tokens.
+> - Si l'UI demande des **scopes/permissions** (cas du token "with scopes") : sélectionne **`read:jira-work`**, **`read:confluence-content.all`**, **`write:confluence-content`**. Si trop chiadé, prends "tous les scopes" — c'est ton token perso, tu peux le révoquer après. Si l'UI ne propose **pas** de scopes, ignore cette étape.
+> - Valide / clique **Create**.
+>
+> **Étape 4 — Copie le token** :
+> - Une popup s'ouvre avec le token (une longue chaîne qui commence par `ATATT3xFf...`).
+> - **Clique "Copy"** ou copie manuellement la chaîne complète.
+> - ⚠ **Très important** : une fois la popup fermée, tu ne pourras **jamais** revoir ce token. Si tu le perds, il faudra en regénérer un nouveau.
+
+**Wait for the user to confirm** they have the token before moving on :
+
+> Tu as ton token copié dans le presse-papier ? (yes / pas encore)
+
+If "pas encore", patiently re-explain the steps that blocked them. **Do not move on without confirmation.**
+
+#### Step 3.bis — Comment veux-tu transmettre le token ?
+
+Once the user has the token, offer a choice :
+
+> **Choix : comment tu veux qu'on enregistre le token dans `.env` ?**
+>
+> **A — Rapide** : tu colles le token dans ta prochaine réponse, je l'écris dans `.env` pour toi. ⚡ 30 secondes, mais le token transite par le chat (Anthropic peut le voir techniquement, même si pas conservé).
+>
+> **B — Plus prudent** : tu ouvres `.env` toi-même (à la racine du projet, je le crée si besoin) et tu y ajoutes la ligne :
 > ```
-> https://id.atlassian.com/manage-profile/security/api-tokens
+> ATLASSIAN_API_TOKEN="<colle-ton-token-ici-entre-les-guillemets>"
 > ```
+> Tu sauvegardes. Je ne verrai jamais la valeur. 🔒
 >
-> 1. Clique **"Create API token (legacy)"**
-> 2. Donne-lui un label parlant — par exemple `Claude Code BetArena`
-> 3. Clique **Create**, puis **Copy** — ⚠ **tu ne pourras plus le voir ensuite**, donc colle-le ici tout de suite.
->
-> Quel est ton email Atlassian ? (celui que tu utilises pour te connecter à atlassian.net)
+> Choix ? (A / B)
 
-Capture the email. Then :
+**Then capture the email** regardless of A/B :
 
-> Et le token API que tu viens de copier ?
+> Aussi : quel est ton **email Atlassian** ? (celui que tu utilises pour te connecter à atlassian.net — il n'est pas sensible, je peux l'écrire dans `.env` directement)
 
-Capture the token. **Do NOT echo it back** in subsequent messages.
+Capture the email.
+
+**If A** : ask for the token, capture it, **do NOT echo it back** in subsequent messages.
+
+**If B** : tell the user :
+> OK. Je vais d'abord créer (ou enrichir) `.env` avec ton email et l'URL Jira/Confluence, puis je laisserai vide la ligne `ATLASSIAN_API_TOKEN=""` pour que tu la remplisses toi-même. Tu me préviens quand c'est fait.
+
+After the user confirms ("fait" / "ok"), **validate without reading the value** : check that `.env` contains a line matching `^ATLASSIAN_API_TOKEN="..."` with a non-empty quoted string between the quotes (use `grep -E '^ATLASSIAN_API_TOKEN="[^"]+"' .env` via Bash — count matches, don't print the line). If empty, ask the user to fill it before moving on.
 
 #### Step 4 — Update or create `.env` (the smart part)
 
@@ -174,13 +211,15 @@ This is where the agent **does the work for the user**.
 
 Read `.env` at the project root if it exists. Three cases :
 
+For Option B (user fills token themselves), substitute `ATLASSIAN_API_TOKEN="<token>"` with `ATLASSIAN_API_TOKEN=""` below — leave the value empty for the user to fill.
+
 **Case A — `.env` doesn't exist**
 Create it with just the Atlassian block :
 
 ```
 # Atlassian (Jira + Confluence) — used by .claude/scripts/start-atlassian.sh
 ATLASSIAN_EMAIL="<email>"
-ATLASSIAN_API_TOKEN="<token>"
+ATLASSIAN_API_TOKEN="<token-or-empty-for-option-B>"
 JIRA_URL="https://<domain>.atlassian.net"
 CONFLUENCE_URL="https://<domain>.atlassian.net/wiki"
 ```
@@ -193,7 +232,7 @@ CONFLUENCE_URL="https://<domain>.atlassian.net/wiki"
 
 # Atlassian (Jira + Confluence) — used by .claude/scripts/start-atlassian.sh
 ATLASSIAN_EMAIL="<email>"
-ATLASSIAN_API_TOKEN="<token>"
+ATLASSIAN_API_TOKEN="<token-or-empty-for-option-B>"
 JIRA_URL="https://<domain>.atlassian.net"
 CONFLUENCE_URL="https://<domain>.atlassian.net/wiki"
 ```
@@ -204,6 +243,17 @@ Ask the user before overwriting :
 > ⚠ Ton `.env` contient déjà des variables Atlassian. Tu veux les écraser avec les nouvelles valeurs ? (yes / no)
 
 If yes, replace the values for `ATLASSIAN_EMAIL`, `ATLASSIAN_API_TOKEN`, `JIRA_URL`, `CONFLUENCE_URL` only — leave everything else untouched. If no, skip and tell them they can edit `.env` manually.
+
+**If user chose Option B in Step 3.bis** (self-edit), after writing the file with an empty `ATLASSIAN_API_TOKEN=""`, prompt them :
+
+> ✓ J'ai écrit `.env` avec ton email et les URLs. Il reste juste le token à remplir :
+>
+> 1. Ouvre `.env` (ex. `code .env` ou `nano .env`)
+> 2. Trouve la ligne `ATLASSIAN_API_TOKEN=""`
+> 3. Colle ton token entre les guillemets → `ATLASSIAN_API_TOKEN="ATATT3..."`
+> 4. Sauvegarde et préviens-moi (`fait` / `ok`).
+
+Wait for confirmation, then run `grep -E '^ATLASSIAN_API_TOKEN="[^"]+"' .env | wc -l` — if 0, the token is still empty, ask the user to retry. **Never print the matched line** (it contains the secret).
 
 **Then add `.env` to `.gitignore`** (only if not already there). Use a clear comment block :
 
@@ -231,6 +281,8 @@ Confirm to the user :
   >
   > Voir [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
   >
+  > **⚠ Heads-up sur l'output `brew install uv`** : tu vas voir un *gros mur de texte* (mise à jour du catalogue Homebrew, liste de nouveaux packages, "71 outdated formulae installed"…). C'est **normal** et tu peux **tout ignorer**. Le seul truc qui compte : la fin de l'output doit contenir une ligne avec **🍺** (l'emoji bière) suivie de `/usr/local/Cellar/uv/<version>` ou similaire. Si tu vois ça, l'install est OK. Pareil pour Linux : à la fin du `curl | sh`, cherche `installed uv <version>`.
+  >
   > Une fois installé, vérifie avec : `uvx --version`
 
 Wait for the user to confirm.
@@ -245,7 +297,7 @@ Wait for the user to confirm.
 > 2. Relance : `claude`
 > 3. Au démarrage, Claude Code te demandera d'**approuver le serveur Atlassian** — accepte.
 >
-> ✓ Tu auras ensuite accès à Jira et Confluence depuis n'importe quelle commande BetArena. Le ticket et la spec liée seront automatiquement chargés par `/bet-new-feature BA-XXX`.
+> ✓ Tu auras ensuite accès à Jira et Confluence depuis n'importe quelle commande BetArena. Le ticket et la spec liée seront automatiquement chargés par `/bet-new-feature BET-XXX`.
 
 #### Final actions
 
@@ -327,37 +379,64 @@ _No feature in progress._
 _None yet._
 ```
 
-> Note: Professor Mode is no longer tracked here — it lives as a native Claude Code output style (`/output-style betarena-professor`). See `/bet-prof` for details.
+> Note: Professor Mode is no longer tracked here — it lives as a native Claude Code output style. Activate via `/output-style betarena-professor` (and `/output-style default` to revert).
 
 ## Phase 6 — Découverte des super-pouvoirs
 
-Avant de finir, présente brièvement les 3 artefacts installés que l'utilisateur ne connaît probablement pas :
+Avant de finir, présente les outils installés que l'utilisateur ne connaît probablement pas. **Promets-toi de mentionner explicitement le Professor Mode** — c'est le plus utile pour un étudiant qui apprend.
 
 ```
 Tes super-pouvoirs BetArena
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Output style "betarena-professor"
-   → /output-style betarena-professor active le mode pédagogue global.
-   → Ou ajoute "prof" à n'importe quelle commande pour un usage ponctuel
-     (ex: /bet-execute 1 prof).
 
-2. Skill "betarena-conventions"
-   → Auto-chargé quand je m'apprête à commit, push, créer une PR, ou créer
-     une branche. Pas besoin de me rappeler les règles, je les connais.
+🎓 Professor Mode (mode pédagogue)
+   En mode "Prof", j'explique le *pourquoi* derrière chaque décision non
+   triviale, je cite des fichiers du codebase, je fais des pauses aux
+   points clés, et je termine chaque unité de travail par un mini-recap
+   "ce qu'on a appris". Très utile quand tu découvres une stack.
 
-3. Hooks (déjà actifs après ton approbation au premier launch)
-   → block-protected-branch : impossible de committer sur main/develop
-     même par accident.
-   → suggest-refresh-after-pull : après un git pull qui change le code,
-     je te rappellerai /bet-refresh.
+   Comment l'activer :
+   → Global (toute la session) :  /output-style betarena-professor
+   → Désactivation :              /output-style default
+   → Ponctuel (1 commande)  :     ajoute le mot "prof" en arg
+                                  (ex: /bet-execute 1 prof)
 
-Pause/reprise de session :
-   → /bet-pause   en fin de session pour capturer où tu t'arrêtes.
-   → /bet-progress en début de session pour reprendre là où tu étais.
+💡 Commande "couteau suisse" /bet
+   Si tu ne te souviens plus du nom exact d'une commande, tape juste
+   /bet — je lis l'état du projet et te propose la prochaine action
+   logique. Pratique au début.
+
+📚 Skill "betarena-conventions" (auto-chargé)
+   Pas besoin de me rappeler les règles (format commit, branches
+   BET-XXX, Task runner, DoD) — je les ai en tête dès que je m'apprête
+   à commit/PR/branch.
+
+🛡 Hooks de sécurité (déjà actifs)
+   → Impossible de committer sur main/develop par accident.
+   → Après un git pull qui change le code, je te rappellerai /bet-refresh.
+   → Lint auto après chaque modification de fichier.
+
+⏸ Pause / reprise de session
+   → /bet-pause    en fin de session, je capture où tu t'arrêtes.
+   → /bet-progress en début de session, je reprends là où tu étais.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-Demande : "Des questions sur ces outils ? (oui / non)"
+**Then offer to enable Professor Mode now** (especially valuable for student users) :
+
+> Tu veux que j'active le **Professor Mode** maintenant pour cette session ? Je t'expliquerai chaque décision non triviale, idéal si tu découvres BetArena. (yes / no — tu peux changer d'avis à tout moment avec `/output-style default`)
+
+If yes : tell the user to type `/output-style betarena-professor` themselves (Claude Code's `/output-style` is a user command, the agent can't invoke it on the user's behalf). Confirm by saying :
+
+> Tape exactement ceci :
+>
+> ```
+> /output-style betarena-professor
+> ```
+>
+> Une fois fait, je serai en mode pédagogue jusqu'à `/output-style default` (ou la fin de session).
+
+Demande ensuite : "D'autres questions sur ces outils ? (oui / non)"
 
 Si l'utilisateur a des questions, réponds-y. Sinon, passe au Finish.
 

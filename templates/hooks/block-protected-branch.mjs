@@ -38,8 +38,8 @@ process.stdin.on('end', () => {
 
   const reason =
     `BetArena Golden Rule: direct commits to '${branch}' are forbidden.\n` +
-    `Create a feature/BA-XXX-* or fix/BA-XXX-* branch first (see CONTRIBUTING.md).\n` +
-    `Quick fix: /bet-branch  → then /bet-commit`;
+    `Create a feature/BET-XXX-* or fix/BET-XXX-* branch first (see CONTRIBUTING.md).\n` +
+    `Quick fix: /bet-new-feature [fix] <name>  → then /bet-commit`;
 
   console.log(JSON.stringify({
     hookSpecificOutput: {
